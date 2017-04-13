@@ -1,0 +1,309 @@
+package ru.idealplm.pm.vp2g;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Dialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
+
+import ru.idealplm.pm.vp2g.VPRunnable;
+import ru.idealplm.util.pbwnd.ProgressBarWindow;
+
+import com.teamcenter.rac.kernel.TCException;
+
+public class VPDialog extends Dialog {
+
+	public boolean isOK = false;
+	public static Display display;
+
+//	public static String globalRemark = "";
+	public boolean addSpareLine = false;
+	
+	
+	protected Object result;
+	protected static Shell shell;
+	private Table table;
+	private Text text;
+//	private Button button2;
+	private Composite blockArea;
+
+
+	public static Display getDisplay() {
+		return display;
+	}
+	
+	/**
+	 * Create the dialog.
+	 * @param parent
+	 * @param style
+	 */
+	public VPDialog(Shell parent, int style) {
+		super(parent, style);
+		setText("SWT Dialog");
+	}
+
+	/**
+	 * Open the dialog.
+	 * @return the result
+	 * @throws TCException 
+	 */
+	public Object open() throws TCException {
+//		EngineVP2G.initialize();
+//		EngineVP2G.getHashMap4VP(BuildVP2G.topBomLine, 1, 1);
+		createContents();
+		shell.open();
+		shell.layout();
+		display = getParent().getDisplay();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch()) {
+				display.sleep();
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Create contents of the dialog.
+	 * @throws TCException 
+	 */
+	private void createContents() throws TCException {
+		shell = new Shell(getParent(), SWT.DIALOG_TRIM);
+		shell.setSize(289, 342);
+		shell.setText("Ведомость покупных изделий");
+		
+		
+		final Combo combo = new Combo(shell, SWT.NONE | SWT.READ_ONLY);
+		combo.setBounds(7, 260, 180, 21);
+		String[] items = EngineVP2G.factoryArray;
+		combo.setItems(items);
+		combo.select(0);
+
+		
+		Button btnOk = new Button(shell, SWT.NONE);
+		btnOk.setBounds(76, 287, 68, 23);
+		btnOk.setText("OK");
+		btnOk.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+
+				System.out.println("OK!");
+				
+//				EngineVP2G.isAddEmptyAfterEach = button2.getSelection();
+//				System.out.println("Add empty after every line: " + button2.getSelection());
+				
+				EngineVP2G.factory = EngineVP2G.factoryArrayForStamp[combo.getSelectionIndex()];
+				
+//				addSpareLine = button2.getSelection();
+				
+				shell.close();
+
+				
+				VPRunnable runnable = new VPRunnable(display);
+				Thread mainBuild = new Thread(runnable); 
+				ProgressBarWindow spProgressBar = new ProgressBarWindow(mainBuild, "Построение ВП...");
+				spProgressBar.placeAtCenter();
+				spProgressBar.getShell().setActive();
+				runnable.setPB(spProgressBar);
+				mainBuild.start();
+			}
+
+//			private void collectReservFields() {
+//				TableItem[] tableItems = table.getItems();
+//				for (int i=0; i < EngineVP.blocks.size(); i++)
+//				{
+//					EngineVP.blocks.get(i).sparePosition = Integer.parseInt(tableItems[i].getText(1));
+//					EngineVP.blocks.get(i).spareLines = Integer.parseInt(tableItems[i].getText(2));
+//					System.out.println("[" + i + "]: " + tableItems[i].getText(1) + "\n[" + i + "]: " + tableItems[i].getText(2));
+//				}
+//			}
+		});
+		
+		Button btnCancel = new Button(shell, SWT.NONE);
+		btnCancel.setBounds(150, 287, 68, 23);
+		btnCancel.setText("Cancel");
+		btnCancel.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				System.out.println("----------------- Cancel! -----------------");
+				shell.close();
+			}
+		});
+		
+//		blockArea = new Composite(shell, SWT.NONE);
+//		blockArea.setBounds(7, 32, 273, 181);
+//		
+//		
+//		final Group group = new Group(blockArea, SWT.NONE);
+//		group.setText("\u0420\u0435\u0437\u0435\u0440\u0432 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043F\u043E \u0440\u0430\u0437\u0434\u0435\u043B\u0430\u043C");
+//		group.setBounds(0, 0, 268, 176);
+//		
+//		table = new Table(group, SWT.BORDER | SWT.FULL_SELECTION);
+//		table.setBounds(10, 22, 248, 129);
+//		table.setHeaderVisible(true);
+//		table.setLinesVisible(true);
+//		
+//		final TableEditor editor = new TableEditor(table);
+//		// The editor must have the same size as the cell and must
+//		// not be any smaller than 50 pixels.
+//		editor.horizontalAlignment = SWT.RIGHT;
+//		editor.grabHorizontal = true;
+//		editor.minimumWidth = 50;
+//		
+//		TableColumn tableColumn = new TableColumn(table, SWT.NONE);
+//		tableColumn.setWidth(161);
+//		tableColumn.setText("\u0420\u0430\u0437\u0434\u0435\u043B");
+//		
+//		TableColumn tableColumn_2 = new TableColumn(table, SWT.NONE);
+//		tableColumn_2.setWidth(81);
+//		tableColumn_2.setText("\u0420\u0435\u0437\u0435\u0440\u0432 \u0441\u0442\u0440\u043E\u043A");
+//
+//		final Set<Integer>keys = EngineVP2G.sectionsMap.keySet();
+//		
+//		System.out.println("SET size: --- " + keys.size());
+//		for(int currIndex: keys) {
+//			TableItem item = new TableItem(table, SWT.NONE);
+//			item.setText(new String[] {Integer.toString(currIndex)/*EngineVP.getSectionByID(currSection.getID())*/});
+//		}
+//		
+//		table.setEnabled(false);
+//	
+//		final Button button = new Button(group, SWT.CHECK);
+//		button.setBounds(10, 157, 234, 16);
+//		button.setText("\u041A\u0430\u0436\u0434\u044B\u0439 \u0440\u0430\u0437\u0434\u0435\u043B \u0441 \u043D\u043E\u0432\u043E\u0433\u043E \u043B\u0438\u0441\u0442\u0430");
+//		button.setSelection(true);
+//		
+//		button.addSelectionListener(new SelectionAdapter() {
+//			@Override
+//			public void widgetSelected(SelectionEvent e) {
+//				if (button.getSelection()) {
+//					table. clearAll();
+//					table.setEnabled(false);
+//					int i = 0;
+//					for(int currIndex: keys) {
+//						table.getItem(i).setText(new String[] {Integer.toString(currIndex), "0"});
+//						i++;
+//					}
+//				}
+//				else {
+//					table.clearAll();
+//					table.setEnabled(true);
+//					int i = 0;
+//					for(int currIndex: keys) {
+//						table.getItem(i).setText(new String[] {Integer.toString(currIndex)});
+//						i++;
+//					}
+//				}
+//			}
+//		});
+//		
+//		table.addListener(SWT.MouseDown, new Listener() {
+//			public void handleEvent(Event event) {
+//				Rectangle clientArea = table.getClientArea();
+//				Point pt = new Point(event.x, event.y);
+//				int index = table.getTopIndex();
+//				while (index < table.getItemCount()) {
+//					boolean visible = false;
+//					final TableItem item = table.getItem(index);
+//					for (int i = 1; i < table.getColumnCount(); i++) {
+//						Rectangle rect = item.getBounds(i);
+//						if (rect.contains(pt)) {
+//							final int column = i;
+//							final Text text = new Text(table, SWT.NONE);
+//							Listener textListener = new Listener() {
+//								public void handleEvent(final Event e) {
+//									switch (e.type) {
+//									case SWT.FocusOut:
+//										item.setText(column, text.getText());
+//										text.dispose();
+//										break;
+//									case SWT.Traverse:
+//										switch (e.detail) {
+//										case SWT.TRAVERSE_RETURN:
+//											item.setText(column, text.getText());
+//											// FALL THROUGH
+//										case SWT.TRAVERSE_ESCAPE:
+//											text.dispose();
+//											e.doit = false;
+//										}
+//										break;
+//									}
+//								}
+//							};
+//							text.addListener(SWT.FocusOut, textListener);
+//							text.addListener(SWT.Traverse, textListener);
+//							editor.setEditor(text, item, i);
+//							text.setText(item.getText(i));
+//							text.selectAll();
+//							text.setFocus();
+//							return;
+//						}
+//						if (!visible && rect.intersects(clientArea)) {
+//							visible = true;
+//						}
+//					}
+//					if (!visible)
+//						return;
+//					index++;
+//				}
+//			}
+//		});
+		
+		Label label = new Label(shell, SWT.NONE);
+		label.setBounds(7, 241, 83, 13);
+		label.setText("\u041E\u0440\u0433\u0430\u043D\u0438\u0437\u0430\u0446\u0438\u044F");
+		
+//		recursiveSetEnabled(blockArea, false);
+		
+//		final Button button_1 = new Button(shell, SWT.CHECK);
+//		button_1.addSelectionListener(new SelectionAdapter() {
+//			@Override
+//			public void widgetSelected(SelectionEvent e) {
+//				if (button_1.getSelection()) {
+//					recursiveSetEnabled (blockArea, true);
+//					EngineVP2G.isSplittedByBlocks = true;
+//				}
+//				else {
+//					recursiveSetEnabled (blockArea, false);
+//					EngineVP2G.isSplittedByBlocks = false;
+//				}
+//			}
+//		});
+//		button_1.setText("\u0420\u0430\u0437\u0431\u0438\u0442\u044C \u043F\u043E \u0440\u0430\u0437\u0434\u0435\u043B\u0430\u043C");
+//		button_1.setBounds(10, 10, 144, 16);
+		
+//		button2 = new Button(shell, SWT.CHECK);
+//		button2.setBounds(10, 219, 234, 16);
+//		button2.setText("\u0414\u043E\u0431\u0430\u0432\u043B\u044F\u0442\u044C \u043F\u0443\u0441\u0442\u0443\u044E \u0441\u0442\u0440\u043E\u043A\u0443 \u043F\u043E\u0441\u043B\u0435 \u0437\u0430\u043F\u0438\u0441\u0438");
+		
+//		Label label_1 = new Label(shell, SWT.NONE);
+//		label_1.setText("\u0414\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442");
+//		label_1.setBounds(10, 235, 139, 13);
+
+	}
+	
+//	public void recursiveSetEnabled(Control ctrl, boolean enabled) {
+//		   if (ctrl instanceof Composite) {
+//		      Composite comp = (Composite) ctrl;
+//		      for (Control c : comp.getChildren())
+//		         recursiveSetEnabled(c, enabled);
+//		   } else {
+//		      ctrl.setEnabled(enabled);
+//		   }
+//		}
+}

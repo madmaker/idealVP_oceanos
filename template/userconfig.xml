@@ -1,0 +1,20 @@
+<fop version="1.0">
+
+    <renderers>
+        <renderer mime="application/pdf">
+            <fonts>     
+            
+				<font kerning="yes" embed-url="file:///c:/windows/fonts/calibri.ttf">
+                    <font-triplet name="arial" style="normal" weight="normal"/>
+                </font>
+                <font kerning="yes" embed-url="file:///c:/windows/fonts/calibrii.ttf">
+                    <font-triplet name="arial" style="italic" weight="normal"/>
+                </font>   
+            
+                <!-- font kerning="yes" embed-url="file:///c:/windows/fonts/arial.ttf">
+                    <font-triplet name="Arial" style="normal" weight="normal"/>
+                </font-->                 
+            </fonts>
+         </renderer>
+    </renderers>
+</fop>

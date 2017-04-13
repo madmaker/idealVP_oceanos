@@ -1,0 +1,103 @@
+package ru.idealplm.pm.vp2g;
+
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.teamcenter.rac.aif.kernel.AIFComponentContext;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentItemRevision;
+import com.teamcenter.rac.kernel.TCException;
+
+public class VPValidator {
+	
+	private ArrayList<String> errorList;
+	private TCComponentBOMLine topBOMLine;
+	private TCComponentItemRevision topIR;
+	private ReportsItemUtils itemUtils = ReportsItemUtils.getReportsItemUtils();
+	
+	public VPValidator(TCComponentBOMLine topBomLine){
+		this.topBOMLine = topBomLine;
+	}
+	
+	public ArrayList<String> validate() {
+		errorList = new ArrayList<String>();
+		try {
+			topIR = topBOMLine.getItemRevision();
+			if (topIR.getProperty("pm8_Designation").trim().equals("")) {
+				errorList.add("У изделия, для которого строится ВП, не задано обозначение.");
+			}
+			TCComponentItemRevision kdRev = ReportsItemUtils.getVpRev(topBOMLine);
+			if ((kdRev != null)	&& ReportsItemUtils.isComponentHasReleasedStatus(kdRev)) {
+				errorList.add("У данной ревизии уже есть утверждённая ВП");
+			}
+			if ((kdRev != null) && ReportsItemUtils.isVpDatasetBlocked(kdRev)) {
+				errorList.add("Текущий набор данных заблокирован.\nЗакройте PDF файл и повторите попытку.");
+			}
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+//		try {
+//			errorList.addAll(validateItems());
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+		return errorList;
+	}	
+	
+//	// Функция проверяет изделия из состава сборки и если есть ошибки, то добавляет их в возвращаемый ArrayList
+//	private ArrayList<String> validateItems() throws Exception{
+//		ArrayList<String> invalidItems = new ArrayList<String>();
+//		ArrayList<String> untypedDocs = new ArrayList<String>();
+//		ArrayList<String> missingDesignation = new ArrayList<String>();
+//		
+//		untypedDocs.add("Для следующих Конструкторских Документов не найден тип документа:");
+//		missingDesignation.add("У следующих Изделий Предприятия не задан атрибут Обозначение:");
+//		
+//		for (AIFComponentContext currCompContext : topBOMLine.getItemRevision().getRelated("Pm8_DocRel")) {
+//			if (currCompContext.getComponent().getType().equals("Pm8_KDRevision")
+//					&& !(currCompContext.getComponent().getProperty("item_id").equals(BuildSpec2G.topBom.getItemRevision().getProperty("pm8_Designation")))) 
+//			{
+//				String id = ((TCComponentItemRevision) currCompContext.getComponent()).getItem().getProperty("item_id").trim();
+//				VPDataOcc uniqueAddingLine = new VPDataOcc();
+//				Pattern pattern = Pattern.compile("\\D{1,3}\\d{0,2}$");
+//				Matcher match = pattern.matcher(id);
+//				if (match.find()) {
+//					String docType = match.group().trim();
+//					uniqueAddingLine.docType = docType;
+//					String clearDocType = docType.replaceAll("\\d{0,2}$", "");
+//					if (!ReportsProperties.docCodesArrayList.contains(clearDocType) && !ReportsProperties.kitCodesArrayList.contains(clearDocType)) {
+//						untypedDocs.add("  " + id + " " + currCompContext.getComponent().getProperty("object_name"));
+//					}
+//				}
+//			}
+//		}
+//		
+//		for (AIFComponentContext currBOMLineContext : topBOMLine.getChildren()) {
+//			String type = "";
+//			String typeOfPart = "";
+//			TCComponentBOMLine currentBOMLine;
+//			TCComponentItemRevision currentIR;
+//			
+//			currentBOMLine = (TCComponentBOMLine) currBOMLineContext.getComponent();
+//			currentIR = currentBOMLine.getItemRevision();
+//			type = currentIR.getItem().getType();
+//
+//			if (type.equals("Pm8_CompanyPart")){
+//				typeOfPart = ((TCComponentBOMLine) currBOMLineContext.getComponent()).getItem().getTCProperty("pm8_TypeOfPart").getStringValue();
+//				if(!(typeOfPart.equals(itemUtils.GEOM_TYPE) || typeOfPart.equals(itemUtils.MATERIAL_TYPE)) && currentIR.getProperty("pm8_Designation").trim().equals("")){
+//					missingDesignation.add("  " + currentIR.getItem().getProperty("item_id") + " " + currentBOMLine.getProperty("bl_rev_object_name"));
+//				}
+//			}
+//			
+//		}
+//		if(untypedDocs.size()>1){
+//			invalidItems.addAll(untypedDocs);
+//		}
+//		if(missingDesignation.size()>1){
+//			invalidItems.addAll(missingDesignation);
+//		}
+//		return invalidItems;
+//	}
+	
+}
