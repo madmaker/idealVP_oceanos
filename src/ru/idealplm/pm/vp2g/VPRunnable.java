@@ -19,8 +19,8 @@ import ru.idealplm.util.pbwnd.ProgressBarWindow;
 import com.teamcenter.rac.kernel.TCComponentItemRevision;
 import com.teamcenter.rac.kernel.TCException;
 
-public class VPRunnable implements Runnable{
-	
+public class VPRunnable implements Runnable
+{	
 	static boolean isChangable = true;
 	static boolean hasWrongZones;
 	private static String warnMessage = "\n";

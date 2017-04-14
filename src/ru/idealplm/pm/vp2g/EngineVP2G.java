@@ -134,11 +134,11 @@ public class EngineVP2G
 	static ArrayList<String> suspectMaterials = new ArrayList<String>();
 	public static ArrayList<Integer> max_cols_sise_a1 = null;
 
-	public static final String DOC_TYPE = "Pm8_KDRevision";
+	public static final String DOC_TYPE = "Oc9_KDRevision";
 	public static final String COMPLEX_TYPE = "Complex";
 	public static final String ASSEMBLY_TYPE = "Assembly";
 	public static final String DETAIL_TYPE = "Part";
-	public static final String MATERIAL_TYPE = "Pm8_Material";
+	public static final String MATERIAL_TYPE = "Oc9_Material";
 	public static final String KIT_TYPE = "Set";
 	public static final String GEOM_TYPE = "GeomOfMaterial";
 
@@ -146,7 +146,6 @@ public class EngineVP2G
 	static ArrayList<String> kitCodesArrayList;
 	static ArrayList<String> arrListErrorElements;
 
-	static HashMap<String, String> sourceMap = null;
 	static Map<String, String> form_block;
 	static Map<String, HashMap<String, VPDataOcc>> mapItemsCached;
 	static Map<String, VPDataOcc> mapGlobalBoughts;
@@ -182,10 +181,6 @@ public class EngineVP2G
 	static void initialize() throws TCException, IOException {
 		log.info("Initializing...");
 		
-		if (!BuildVP2G.debugMode)
-			makeSourceMap();
-		
-		
 		globalPosition = 0;
 		topIR = BuildVP2G.topBomLine.getItemRevision();
 		session = BuildVP2G.topBomLine.getSession();
@@ -194,11 +189,7 @@ public class EngineVP2G
 		form_block = new HashMap<String, String>();
 		page = 0;
 
-		if (BuildVP2G.debugMode) {
-			nonbreakable = "ГОСТ>,ОСТ>,ТУ>,СТП>,Ц15.>,Ц12.>,фос.>";
-		} else {
-			nonbreakable = sourceMap.get("NONBREAKABLE");
-		}
+		nonbreakable = "ГОСТ>,ОСТ>,ТУ>,СТП>,Ц15.>,Ц12.>,фос.>";
 
 		nonbreakableArray = nonbreakable.split(",\\s*");
 
@@ -211,75 +202,46 @@ public class EngineVP2G
 		numOfCurrLine = 1;
 	}
 
-	static TCComponentItemRevision getVpRev(TCComponentBOMLine topBOMLine) throws Exception {
-		AIFComponentContext[] compContext = topBOMLine.getItemRevision().getRelated("Pm8_DocRel");
-		for (AIFComponentContext currContext : compContext) {
-			String type = currContext.getComponent().getType();
-			if (type.equals("Pm8_KDRevision")) {
-				if (currContext.getComponent().getProperty("item_id")
-						.equals(topBOMLine.getItemRevision().getProperty("pm8_Designation") + " ВП")) {
-					System.out.println("!!!LOL!!! " + currContext.getComponent().getProperty("item_id") + " === " + topBOMLine.getItemRevision().getProperty("pm8_Designation") + " ВП");
-					return (TCComponentItemRevision) currContext.getComponent();
-				}
-			}
-		}
-		return null;
-	}
-
-	static boolean isComponentHasReleasedStatus(TCComponent comp) throws TCException {
-		boolean out = false;
-		TCComponent[] statuses = null;
-		TCProperty statusProp = comp.getTCProperty("release_status_list");
-		if (statusProp != null) {
-			statuses = statusProp.getReferenceValueArray();
-			for (TCComponent currStatus : statuses) {
-				if (currStatus.getProperty("object_name").equals("Released")) {
-					out = true;
-					break;
-				}
-			}
-		}
-		return out;
-	}
-
-	static HashMap<String, VPDataOcc> getListOfBoughts(TCComponentBOMLine currentTopBomLine, Integer accumQty, int level) throws Exception {
+	static HashMap<String, VPDataOcc> getListOfBoughts(TCComponentBOMLine currentTopBomLine, Integer accumQty, int level) throws Exception
+	{
 		level++;
 		HashMap<String, VPDataOcc> mapCurrLevelBoughts = null;
-		String topId = currentTopBomLine.getItemRevision().getProperty("pm8_Designation");
-		if (!hasVP(currentTopBomLine) || (level == 1)) {
+		String topId = currentTopBomLine.getItemRevision().getProperty("item_id");
+		if (!ReportsItemUtils.hasVP(currentTopBomLine) || (level == 1))
+		{
+			System.out.println("--- Нету ВП!!!!");
 			AIFComponentContext[] childBOMLines =  unpackBomList(currentTopBomLine);
-			for (int i = 0; i < childBOMLines.length; i++)	{
-				
-				
-				
+			for (int i = 0; i < childBOMLines.length; i++)
+			{
 				TCComponentBOMLine currBOMLine = (TCComponentBOMLine)childBOMLines[i].getComponent();
 				TCComponentItemRevision itemRev = currBOMLine.getItemRevision();
 				String type = itemRev.getType();
 				String typeOfPart = "";
 				
-				if (type.equals("Pm8_CompanyPart"))
-					typeOfPart = currBOMLine.getItem().getTCProperty("pm8_TypeOfPart").getStringValue();
+				if (type.equals("Oc9_CompanyPart"))
+					typeOfPart = currBOMLine.getItem().getTCProperty("oc9_TypeOfPart").getStringValue();
 
 				boolean isSource = false;
 				TCComponent sourceComp = null;
 				
-				if (typeOfPart.equals(GEOM_TYPE)) {
+				if(type.equals("Oc9_GeomOfMat"))
+				{
 					sourceComp = getSourceForGeometry(itemRev);
 					isSource = (sourceComp != null) ? true : false;
-					
 				}
+				
 				String id = "";
 				if (isSource)
-					id = sourceComp.getProperty("pm8_Designation");
+					id = sourceComp.getProperty("item_id");
 				else
-					id = itemRev.getProperty("pm8_Designation");
+					id = itemRev.getProperty("item_id");
 
 				if (!arrListErrorElements.contains(id)) {
 					String qtyStr = currBOMLine.getProperty("bl_quantity");
 					Double qty =  qtyStr.equals("")? 1.0 : Double.valueOf(qtyStr);
-					String upperItemName = currentTopBomLine.getItem().getProperty("pm8_Designation");
+					String upperItemName = currentTopBomLine.getItem().getProperty("item_id");
 					
-					if (currBOMLine.getChildren().length > 0 && !hasVP(currBOMLine)) {
+					if (currBOMLine.getChildren().length > 0 && !ReportsItemUtils.hasVP(currBOMLine)) {
 						if (mapItemsCached == null || !mapItemsCached.containsKey(id)) {
 							HashMap<String, VPDataOcc> mapBoughts = getListOfBoughts(currBOMLine, accumQty * qty.intValue(), level);
 							if (mapBoughts != null) {
@@ -291,7 +253,7 @@ public class EngineVP2G
 					} else {
 						boolean isPurchased = itemRev.getProperty("source").equals("2");
 						
-						if ((isPurchased || type.equals("Pm8_MaterialRevision") || isSource) || hasVP(currBOMLine)) {
+						if ((isPurchased || type.equals("Oc9_Material") || isSource) || ReportsItemUtils.hasVP(currBOMLine)) {
 							String currMeasure = mapUom.get(currBOMLine.getProperty("bl_uom"));
 							if (currMeasure == null)
 								currMeasure = "*";
@@ -327,34 +289,34 @@ public class EngineVP2G
 								VPDataOcc addingLine = new VPDataOcc();
 								if (isSource) {
 									addingLine.name = sourceComp.getProperty("object_name");
-									addingLine.id = sourceComp.getProperty("pm8_Designation");
+									addingLine.id = sourceComp.getProperty("item_id");
 								} else {
 									addingLine.name = itemRev.getProperty("object_name");
-									addingLine.id = itemRev.getProperty("pm8_Designation");
+									addingLine.id = itemRev.getProperty("item_id");
 									
 								}
-								if (hasVP(currBOMLine))
+								if (ReportsItemUtils.hasVP(currBOMLine))
 									addingLine.idDocForDelivery = itemRev.getProperty("item_id") + " ВП";
 								else {
-									AIFComponentContext[] context = currBOMLine.getItem().whereReferencedByTypeRelation(new String[]{"Pm8_NormDocument"}, new String[] {"Pm8_Instances"});
+									AIFComponentContext[] context = currBOMLine.getItem().whereReferencedByTypeRelation(new String[]{"Oc9_NormDocument"}, new String[] {"Oc9_Instances"});
 									if (context != null) {
 										if (context.length > 0) {
 											addingLine.idDocForDelivery = context[0].getComponent().getProperty("item_id");
 										}
 									}
 								}
-								if (hasVP(currBOMLine))
+								if (ReportsItemUtils.hasVP(currBOMLine))
 									addingLine.isVpSection = true;
 								addingLine.upperItem = upperItemName;
 								addingLine.qty = qty;
 								addingLine.demension = mapUom.get(currBOMLine.getProperty("bl_uom"));
 
-								System.out.println(">>>>>> " + currBOMLine.getProperty("Pm8_Note"));
+								System.out.println(">>>>>> " + currBOMLine.getProperty("Oc9_Note"));
 								System.out.println("++++++ " + currMeasure);
 								
 								
 								addingLine.remark = currMeasure.equals("*") ?  "" : currMeasure 
-										+ (currBOMLine.getProperty("Pm8_Note").equals("") ? " " : "\n" + currBOMLine.getProperty("Pm8_Note"));
+										+ (currBOMLine.getProperty("Oc9_Note").equals("") ? " " : "\n" + currBOMLine.getProperty("Oc9_Note"));
 								mapCurrLevelBoughts.put(id, VPDataOcc.copyVpOcc(addingLine));
 									
 								System.out.println("Adding line: " + addingLine.name);
@@ -383,12 +345,13 @@ public class EngineVP2G
 		}
 		return mapCurrLevelBoughts;
 	}
-
 	
-	private static void addVpDataOccToGlobalPool(VPDataOcc addingLine) {
+	private static void addVpDataOccToGlobalPool(VPDataOcc addingLine)
+	{
 		if (mapGlobalBoughts == null)
 			mapGlobalBoughts = new HashMap<String, VPDataOcc>();
-		if (mapGlobalBoughts.containsKey(addingLine.id)) {
+		if (mapGlobalBoughts.containsKey(addingLine.id))
+		{
 			VPDataOcc updatedLine = mapGlobalBoughts.get(addingLine.id);
 			if (updatedLine.mapWhereUsed == null) {
 				updatedLine.mapWhereUsed = new HashMap<String, Double>();
@@ -401,7 +364,8 @@ public class EngineVP2G
 				}
 			}
 		}
-		else {
+		else
+		{
 			HashMap<String,Double> mapWhereUsed = new HashMap<String, Double>();
 			mapWhereUsed.put(addingLine.upperItem, addingLine.qty);
 			addingLine.mapWhereUsed = mapWhereUsed;
@@ -409,7 +373,8 @@ public class EngineVP2G
 		}
 	}
 
-	private static void copyCached2GlobalMap(HashMap<String, VPDataOcc> inMap, int qty) {
+	private static void copyCached2GlobalMap(HashMap<String, VPDataOcc> inMap, int qty)
+	{
 		Iterator it = inMap.entrySet().iterator();
 		while (it.hasNext()) {
 			Map.Entry<String, VPDataOcc> pairs = (Map.Entry<String, VPDataOcc>)it.next();
@@ -472,21 +437,9 @@ public class EngineVP2G
 		return outMap;
 	}
 	
-	static boolean hasVP(TCComponentBOMLine topBOMLine) throws TCException {
-		AIFComponentContext[] contextArray = topBOMLine.getItemRevision().getRelated("Pm8_DocRel");
-		for (AIFComponentContext currContext : contextArray) {
-			TCComponentItemRevision currBOMRev = (TCComponentItemRevision)currContext.getComponent();
-			String itemId = currBOMRev.getProperty("item_id").trim();
-			System.out.println(" 2 last char: " + itemId.substring(itemId.length()-2));
-			if (itemId.substring(itemId.length()-2).equals("ВП"))
-				return true;
-		}
-		return false;
-	}
-
 	public static boolean addToTeamcenter() throws Exception {
-		TCComponentItemRevision vpRev = getVpRev(BuildVP2G.topBomLine);
-		if((vpRev != null) && !isComponentHasReleasedStatus(vpRev)) {
+		TCComponentItemRevision vpRev = ReportsItemUtils.getVpRev(BuildVP2G.topBomLine);
+		if((vpRev != null) && !ReportsItemUtils.isComponentHasReleasedStatus(vpRev)) {
 			System.out.println("Deleting previous dataset...");
 			deletePrevVpDataSetOfItemPart(BuildVP2G.topBomLine.getItemRevision());
 			vpIR = vpRev;
@@ -495,11 +448,11 @@ public class EngineVP2G
 			TCComponentItem kdDoc = findKDDocItem();
 			if (kdDoc == null) {
 				System.out.println("CREATING KD ITEM WITH FIRST ITEMREVISION + SignForm!");
-				TCComponentItemRevision newItemRev = (TCComponentItemRevision)createItem("Pm8_KD", BuildVP2G.topBomLine.getItemRevision().getProperty("pm8_Designation") + " ВП",
+				TCComponentItemRevision newItemRev = (TCComponentItemRevision)createItem("Oc9_KD", BuildVP2G.topBomLine.getItemRevision().getProperty("item_id") + " ВП",
 						topIR.getProperty("object_name"),
 						"Создано утилитой по генерации документа \"Ведомость покупных\"")[1];
 				vpIR = newItemRev;
-				createAndAddFormTo(vpIR , "Pm8_GeneralNoteForm", "Pm8_SignRel");
+				//createAndAddFormTo(vpIR , "Pm8_GeneralNoteForm", "Pm8_SignRel");
 				
 			}
 			else {
@@ -511,13 +464,13 @@ public class EngineVP2G
 					
 					deletePrevVpDatasetOfKd(vpIR);
 					deletePrevSignForm(vpIR);
-					createAndAddFormTo(vpIR, "Pm8_GeneralNoteForm",	"Pm8_SignRel");
+					//createAndAddFormTo(vpIR, "Pm8_GeneralNoteForm",	"Pm8_SignRel");
 				}
 			}
 			
-			vpIR.setProperty("pm8_Format", "A3");
+			vpIR.setProperty("oc9_Format", "A3");
 					
-			topIR.add("Pm8_DocRel", vpIR);
+			topIR.add("Oc9_DocRel", vpIR.getItem());
 			topIR.lock();
 			topIR.save();
 			topIR.unlock();
@@ -616,11 +569,11 @@ public class EngineVP2G
 	}
 	
 	private static void deletePrevVpDataSetOfItemPart(TCComponentItemRevision rev) throws Exception {
-		AIFComponentContext[] contextArray = rev.getRelated("Pm8_DocRel");
+		AIFComponentContext[] contextArray = rev.getRelated("Oc9_DocRel");
 		System.out.println("num of children: " + contextArray.length);
 		System.out.println("}}}}}}}}} " + rev.getProperty("pm8_Designation"));
 		for (AIFComponentContext currContext : contextArray) {
-			if (currContext.getComponent().getProperty("item_id").equals(rev.getProperty("pm8_Designation") + " ВП")) {
+			if (currContext.getComponent().getProperty("item_id").equals(rev.getProperty("item_id") + " ВП")) {
 				System.out.println(" -> Deleting previous Dataset: " + currContext.getComponent().getProperty("item_id"));
 				deletePrevVpDatasetOfKd((TCComponentItemRevision)currContext.getComponent());
 			}
@@ -666,11 +619,11 @@ public class EngineVP2G
 
 	private static void deletePrevSignForm(TCComponentItemRevision rev) throws Exception {
 		log.info("deletePrevSignForm");
-		for (AIFComponentContext compContext : rev.getRelated("Pm8_SignRel")) {
+		for (AIFComponentContext compContext : rev.getRelated("Oc9_SignRel")) {
 			if ((compContext.getComponent() instanceof TCComponentForm) 
 					&& compContext.getComponent().getProperty("object_name").equals("Подписи")) {
 				System.out.println("Deleting PDF Dataset in KD");
-				rev.remove("Pm8_SignRel", (TCComponentForm)compContext.getComponent());
+				rev.remove("Oc9_SignRel", (TCComponentForm)compContext.getComponent());
 				rev.lock();
 				rev.save();
 				rev.unlock();
@@ -919,7 +872,7 @@ public class EngineVP2G
 		Map<String, String> ret = new TreeMap<String, String>();
 		TCComponent signForm = null;
 		
-		TCComponentItemRevision vpRev = getVpRev(BuildVP2G.topBomLine);
+		TCComponentItemRevision vpRev = ReportsItemUtils.getVpRev(BuildVP2G.topBomLine);
 		
 		if (vpRev != null) {
 			signForm = vpRev.getRelatedComponent("Oc9_SignRel");
@@ -949,11 +902,11 @@ public class EngineVP2G
 		
 		System.out.println(">>>>>>>>>>>" + naimen + "<<<<<");
 		
-		if (topIR.getItem().getRelated("Pm8_SAPRKTI").length > 0) {
+		/*if (topIR.getItem().getRelated("Pm8_SAPRKTI").length > 0) {
 			System.out.println("got > 0");
 			spCode = (topIR.getItem().getRelated("Pm8_SAPRKTI")[0]).getComponent().getProperty("pm8_SPCode");
 			prjName = (topIR.getItem().getRelated("Pm8_SAPRKTI")[0]).getComponent().getProperty("pm8_FstPrj");
-		}
+		}*/
 		
 		if (signForm != null) {
 			razr = signForm.getProperty("pm8_Designer");
@@ -1010,12 +963,12 @@ public class EngineVP2G
 		System.out.println("Inside getProp for geometry...");
 		TCComponent sourceComp = null;
 		String type = itemRev.getItem().getType();
-		if (type.equals("Pm8_CompanyPart")) {
-			String typeOfPart = itemRev.getItem().getTCProperty("pm8_TypeOfPart").getStringValue();
+		if (type.equals("Oc9_CompanyPart")) {
+			String typeOfPart = itemRev.getItem().getTCProperty("oc9_TypeOfPart").getStringValue();
 			if (typeOfPart.equals(GEOM_TYPE) || typeOfPart.equals(DETAIL_TYPE)) {
-				sourceComp = itemRev.getRelatedComponent("Pm8_SourceRel");
+				sourceComp = itemRev.getRelatedComponent("Oc9_SourceRel");
 				if (sourceComp != null) {
-					System.out.println("Source for " + itemRev.getProperty("pm8_Designation") + " not null");
+					System.out.println("Source for " + itemRev.getProperty("item_id") + " not null");
 //					if (sourceComp.getType().equals(MATERIAL_TYPE)) {
 						return sourceComp;
 //					}
@@ -1025,26 +978,4 @@ public class EngineVP2G
 		System.out.println("SOURCE IS NULL");
 		return sourceComp;
 	}
-	
-	private static void makeSourceMap() throws IOException {
-		sourceMap = new HashMap<String, String>();
-		InputStream is = BuildVP2G.class.getResourceAsStream("/ru/idealplm/pm/sp2G/sp2G.prop");
-		if (is != null) {
-			DataInputStream din = new DataInputStream(is);
-			BufferedReader b = new BufferedReader(new InputStreamReader(din));
-			String s;
-			while ((s = b.readLine()) != null) {
-				String[] splitedStringByKeyAndValue = s.split("=");
-				if (splitedStringByKeyAndValue.length == 2)
-					sourceMap.put(splitedStringByKeyAndValue[0].trim(), splitedStringByKeyAndValue[1].trim());
-			}
-			din.close();
-			is.close();
-		} else {
-			System.out.println("ERROR: cannot find property file\nDEBUG mode is on");
-			BuildVP2G.debugMode = true;
-		}
-
-	}
-	
 }

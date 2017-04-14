@@ -171,6 +171,20 @@ public class ReportsItemUtils {
 		}
 		return null;
 	}*/
+	
+	static boolean hasVP(TCComponentBOMLine topBOMLine) throws TCException {
+		TCComponent[] contextArray = topBOMLine.getItemRevision().getRelatedComponents("Oc9_DocRel");
+		for (TCComponent currContext : contextArray) {
+			TCComponentItem currBOMRev = (TCComponentItem)currContext;
+			String itemId = currBOMRev.getProperty("item_id").trim();
+			System.out.println("Checking if " + itemId + " is a VP document");
+			System.out.println(" 2 last char: " + itemId.substring(itemId.length()-2));
+			if (itemId.substring(itemId.length()-2).equals("ВП"))
+				return true;
+		}
+		return false;
+	}
+	
 	static TCComponentItemRevision getVpRev(TCComponentBOMLine topBOMLine) throws TCException {
 		TCComponentItem result = null;
 		TCComponentItemType itemType = (TCComponentItemType) BuildVP2G.session.getTypeComponent("Oc9_KD");
@@ -186,7 +200,7 @@ public class ReportsItemUtils {
 			}
 		}
 		
-		return result.getLatestItemRevision();
+		return result==null?null:result.getLatestItemRevision();
 	}
 	
 	// Создаёт форму и связывает её указанным отношение с указанным объектом
