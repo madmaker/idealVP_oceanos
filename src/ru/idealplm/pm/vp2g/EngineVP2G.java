@@ -575,7 +575,7 @@ public class EngineVP2G
 		for (AIFComponentContext currContext : contextArray) {
 			if (currContext.getComponent().getProperty("item_id").equals(rev.getProperty("item_id") + " бо")) {
 				System.out.println(" -> Deleting previous Dataset: " + currContext.getComponent().getProperty("item_id"));
-				deletePrevVpDatasetOfKd((TCComponentItemRevision)currContext.getComponent());
+				deletePrevVpDatasetOfKd(((TCComponentItem)currContext.getComponent()).getLatestItemRevision());
 			}
 		}
 	}
@@ -897,7 +897,7 @@ public class EngineVP2G
 		String prjName =" ";
 		String naimen = " ";
 		
-		obozn = compRev.getProperty("pm8_Designation") + " бо";
+		obozn = compRev.getProperty("item_id") + " бо";
 		naimen = compRev.getProperty("object_name");
 		
 		System.out.println(">>>>>>>>>>>" + naimen + "<<<<<");
