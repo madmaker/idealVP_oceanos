@@ -476,8 +476,8 @@ public class EngineVP2G
 			topIR.unlock();
 		}
 
-		InputStream template = EngineVP2G.class.getResourceAsStream("/template/VP.xsl");
-		InputStream fontConfig = getResourceInputStream("/template/userconfig.xml");
+		InputStream template = EngineVP2G.class.getResourceAsStream("/template/OceanosVPPDFTemplate.xsl");
+		InputStream fontConfig = getResourceInputStream("/template/OceanosVPUserconfig.xml");
 
 		if (xmlFile == null)
 			System.out.println("XML FILE == NULL!!!");
