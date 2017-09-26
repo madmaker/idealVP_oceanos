@@ -11,7 +11,7 @@
    <extension point="org.eclipse.ui.handlers">
       <handler
             commandId="ru.idealplm.pm.vp2G.commands.vpBuildingCommand"
-            class="ru.idealplm.pm.vp2g.BuildVP2G">
+            class="ru.idealplm.vp.oceanos.handlers.VPHandler">
       </handler>
    </extension>
    <extension point="org.eclipse.ui.menus">
