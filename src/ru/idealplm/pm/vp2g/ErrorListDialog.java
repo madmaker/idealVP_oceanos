@@ -20,9 +20,9 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-public class ErrorListDialog extends Dialog{
+public class ErrorListDialog /*extends Dialog*/{
 	
-	private Shell shell;
+	/*private Shell shell;
 	private Display display;
 	
 	private ArrayList<String> errorList;
@@ -83,6 +83,6 @@ public class ErrorListDialog extends Dialog{
 			errString += errorList.get(i) + "\n";
 		}
 		return errString.trim();
-	}
+	}*/
 
 }

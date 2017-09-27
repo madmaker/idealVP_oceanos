@@ -27,10 +27,10 @@ public class DataReader
 {
 	public static final String DOC_TYPE = "Oc9_KDRevision";
 	public static final String COMPLEX_TYPE = "Complex";
-	public static final String ASSEMBLY_TYPE = "Assembly";
+	public static final String ASSEMBLY_TYPE = "Сборочная единица"; // "Assembly"
 	public static final String DETAIL_TYPE = "Part";
 	public static final String MATERIAL_TYPE = "Oc9_Material";
-	public static final String KIT_TYPE = "Set";
+	public static final String KIT_TYPE = "Комплект"; // "Set"
 	public static final String GEOM_TYPE = "GeomOfMaterial";
 	public static boolean multiWhereUsed;
 	
@@ -170,6 +170,13 @@ public class DataReader
 		level++;
 		HashMap<String, VPDataOcc> mapCurrLevelBoughts = null;
 		String topId = currentTopBomLine.getItemRevision().getProperty("item_id");
+		
+		String parentType = currentTopBomLine.getItemRevision().getType();
+		String parentTypeOfPart = "";
+		
+		if (parentType.equals("Oc9_CompanyPartRevision"))
+			parentTypeOfPart = currentTopBomLine.getItem().getTCProperty("oc9_TypeOfPart").getStringValue();
+		
 		if (!ReportsItemUtils.hasVP(currentTopBomLine) || (level == 1))
 		{
 			System.out.println("--- Нету ВП!!!!");
@@ -181,7 +188,7 @@ public class DataReader
 				String type = itemRev.getType();
 				String typeOfPart = "";
 				
-				if (type.equals("Oc9_CompanyPart"))
+				if (type.equals("Oc9_CompanyPartRevision"))
 					typeOfPart = currBOMLine.getItem().getTCProperty("oc9_TypeOfPart").getStringValue();
 
 				boolean isSource = false;
@@ -242,12 +249,21 @@ public class DataReader
 							if (mapCurrLevelBoughts == null)
 								mapCurrLevelBoughts = new HashMap<String, VPDataOcc>();
 								
+							System.out.println("!!!!!" + parentType + "!!!!!" + parentTypeOfPart);
 							if (mapCurrLevelBoughts.containsKey(id)) {
 								VPDataOcc updatedVpLine = mapCurrLevelBoughts.get(id);
-								updatedVpLine.qty += qty;
+								if(parentTypeOfPart.equals(ASSEMBLY_TYPE)){
+									updatedVpLine.qtyAssy += qty;
+								} else if (parentTypeOfPart.equals(KIT_TYPE)) {
+									updatedVpLine.qtyKit += qty;
+								}
 								mapCurrLevelBoughts.put(id, updatedVpLine);
 								VPDataOcc updatedGlobalLine = mapGlobalBoughts.get(id);
-								updatedGlobalLine.mapWhereUsed.put(upperItemName, updatedGlobalLine.mapWhereUsed.get(upperItemName) + qty * accumQty);
+								if(parentTypeOfPart.equals(ASSEMBLY_TYPE)){
+									updatedGlobalLine.mapWhereUsedAssy.put(upperItemName, updatedGlobalLine.mapWhereUsedAssy.get(upperItemName) + qty * accumQty);
+								} else if (parentTypeOfPart.equals(KIT_TYPE)) {
+									updatedGlobalLine.mapWhereUsedKit.put(upperItemName, updatedGlobalLine.mapWhereUsedKit.get(upperItemName) + qty * accumQty);
+								}
 							} else {
 								VPDataOcc addingLine = new VPDataOcc();
 								if (isSource) {
@@ -271,7 +287,11 @@ public class DataReader
 								if (ReportsItemUtils.hasVP(currBOMLine))
 									addingLine.isVpSection = true;
 								addingLine.upperItem = upperItemName;
-								addingLine.qty = qty;
+								if(parentTypeOfPart.equals(ASSEMBLY_TYPE)){
+									addingLine.qtyAssy = qty;
+								} else if (parentTypeOfPart.equals(KIT_TYPE)) {
+									addingLine.qtyKit = qty;
+								}
 								addingLine.demension = mapUom.get(currBOMLine.getProperty("bl_uom"));
 
 								System.out.println(">>>>>> " + currBOMLine.getProperty("Oc9_Note"));
@@ -284,7 +304,11 @@ public class DataReader
 									
 								System.out.println("Adding line: " + addingLine.name);
 								
-								addingLine.qty = qty * accumQty;
+								if(parentTypeOfPart.equals(ASSEMBLY_TYPE)){
+									addingLine.qtyAssy = qty * accumQty;
+								} else if (parentTypeOfPart.equals(KIT_TYPE)) {
+									addingLine.qtyKit = qty * accumQty;
+								}
 								addVpDataOccToGlobalPool(addingLine);
 									
 								if (!multiWhereUsed && level > 1)
@@ -316,22 +340,35 @@ public class DataReader
 		if (mapGlobalBoughts.containsKey(addingLine.id))
 		{
 			VPDataOcc updatedLine = mapGlobalBoughts.get(addingLine.id);
-			if (updatedLine.mapWhereUsed == null) {
-				updatedLine.mapWhereUsed = new HashMap<String, Double>();
-				updatedLine.mapWhereUsed.put(addingLine.upperItem, addingLine.qty);
+			if (updatedLine.mapWhereUsedAssy == null) {
+				updatedLine.mapWhereUsedAssy = new HashMap<String, Double>();
+				updatedLine.mapWhereUsedAssy.put(addingLine.upperItem, addingLine.qtyAssy);
 			} else {
-				if (updatedLine.mapWhereUsed.containsKey(addingLine.upperItem)) {
-					updatedLine.mapWhereUsed.put(addingLine.upperItem, updatedLine.mapWhereUsed.get(addingLine.upperItem + addingLine.qty));
+				if (updatedLine.mapWhereUsedAssy.containsKey(addingLine.upperItem)) {
+					updatedLine.mapWhereUsedAssy.put(addingLine.upperItem, updatedLine.mapWhereUsedAssy.get(addingLine.upperItem + addingLine.qtyAssy));
 				} else {
-					updatedLine.mapWhereUsed.put(addingLine.upperItem, addingLine.qty);
+					updatedLine.mapWhereUsedAssy.put(addingLine.upperItem, addingLine.qtyAssy);
+				}
+			}
+			if (updatedLine.mapWhereUsedKit == null) {
+				updatedLine.mapWhereUsedKit = new HashMap<String, Double>();
+				updatedLine.mapWhereUsedKit.put(addingLine.upperItem, addingLine.qtyKit);
+			} else {
+				if (updatedLine.mapWhereUsedKit.containsKey(addingLine.upperItem)) {
+					updatedLine.mapWhereUsedKit.put(addingLine.upperItem, updatedLine.mapWhereUsedKit.get(addingLine.upperItem + addingLine.qtyKit));
+				} else {
+					updatedLine.mapWhereUsedKit.put(addingLine.upperItem, addingLine.qtyKit);
 				}
 			}
 		}
 		else
 		{
-			HashMap<String,Double> mapWhereUsed = new HashMap<String, Double>();
-			mapWhereUsed.put(addingLine.upperItem, addingLine.qty);
-			addingLine.mapWhereUsed = mapWhereUsed;
+			HashMap<String,Double> mapWhereUsedAssy = new HashMap<String, Double>();
+			HashMap<String,Double> mapWhereUsedKit = new HashMap<String, Double>();
+			mapWhereUsedAssy.put(addingLine.upperItem, addingLine.qtyAssy);
+			mapWhereUsedKit.put(addingLine.upperItem, addingLine.qtyKit);
+			addingLine.mapWhereUsedAssy = mapWhereUsedAssy;
+			addingLine.mapWhereUsedKit = mapWhereUsedKit;
 			mapGlobalBoughts.put(addingLine.id, addingLine);
 		}
 	}
@@ -342,14 +379,15 @@ public class DataReader
 		while (it.hasNext()) {
 			Map.Entry<String, VPDataOcc> pairs = (Map.Entry<String, VPDataOcc>)it.next();
 			VPDataOcc updatingLine = mapGlobalBoughts.get(pairs.getKey());
-			HashMap<String, Double> updatingMap = updatingLine.mapWhereUsed;
+			HashMap<String, Double> updatingMapAssy = updatingLine.mapWhereUsedAssy;
+			HashMap<String, Double> updatingMapKit = updatingLine.mapWhereUsedKit;
 			
-			System.out.println("\n1 " + pairs.getValue().upperItem  
+			/*System.out.println("\n1 " + pairs.getValue().upperItem  
 					 + "\n2 " + updatingMap.get(pairs.getValue().upperItem)
 					 + "\n3 " + pairs.getValue().qty * qty
-					);
-			
-			updatingMap.put(pairs.getValue().upperItem, updatingMap.get(pairs.getValue().upperItem) + pairs.getValue().qty * qty);
+					);*/
+			updatingMapAssy.put(pairs.getValue().upperItem, updatingMapAssy.get(pairs.getValue().upperItem) + pairs.getValue().qtyAssy * qty);
+			updatingMapKit.put(pairs.getValue().upperItem, updatingMapKit.get(pairs.getValue().upperItem) + pairs.getValue().qtyKit * qty);
 		}
 	}
 	
@@ -365,11 +403,13 @@ public class DataReader
 				Map.Entry<String, VPDataOcc> pairs = (Map.Entry<String, VPDataOcc>)it.next();
 				if(cachedItem.containsKey(pairs.getKey())) {
 					VPDataOcc updatedLine = cachedItem.get(pairs.getKey());
-					updatedLine.qty += pairs.getValue().qty * qty;
+					updatedLine.qtyAssy += pairs.getValue().qtyAssy * qty;
+					updatedLine.qtyKit += pairs.getValue().qtyKit * qty;
 					cachedItem.put(pairs.getKey(), updatedLine);
 				} else {
 					VPDataOcc addingLine = pairs.getValue();
-					addingLine.qty *= qty;					
+					addingLine.qtyAssy *= qty;
+					addingLine.qtyKit *= qty;		
 					cachedItem.put(pairs.getKey(), addingLine);
 				}
 			}
@@ -390,9 +430,10 @@ public class DataReader
 				while (it.hasNext()) {
 					Map.Entry<String, VPDataOcc> pairs = (Map.Entry<String, VPDataOcc>) it.next();
 					VPDataOcc updatedLine = VPDataOcc.copyVpOcc(pairs.getValue());
-					System.out.println("BEFORE dataLine: " + updatedLine.name + " with qty: " + updatedLine.qty);
-					updatedLine.qty *= qty;
-					System.out.println("AFTER dataLine: " + updatedLine.name + " with qty: " + updatedLine.qty);
+					System.out.println("BEFORE dataLine: " + updatedLine.name + " with qty: " + updatedLine.qtyAssy);
+					updatedLine.qtyAssy *= qty;
+					updatedLine.qtyKit *= qty;
+					System.out.println("AFTER dataLine: " + updatedLine.name + " with qty: " + updatedLine.qtyAssy);
 					outMap.put(pairs.getKey(), updatedLine);
 				}
 			}
@@ -445,7 +486,6 @@ public class DataReader
 	{
 		VPTable vpTable = vp.report.vpTable;
 		Iterator<Entry<String, VPDataOcc>> it = mapGlobalBoughts.entrySet().iterator();
-		String outLine = "";
 		VPBlock listOfOcc = null;
 		VPBlock listOfInnerVP = null;
 		
@@ -466,23 +506,24 @@ public class DataReader
 				listOfOcc.add(currVpLine);
 			}
 			
-			outLine += currVpLine.name + " with map size: " + currVpLine.mapWhereUsed.size() + "\n";
-			
-			Iterator<Entry<String, Double>> it2 = currVpLine.mapWhereUsed.entrySet().iterator();
+			Iterator<Entry<String, Double>> it2 = currVpLine.mapWhereUsedAssy.entrySet().iterator();
 			while (it2.hasNext()) {
 				Map.Entry<String, Double> pair2 = (Entry<String, Double>)it2.next();
-				if (currVpLine.arrayListWhereUsed == null)
-					currVpLine.arrayListWhereUsed = new ArrayList<String>();
-				currVpLine.arrayListWhereUsed.add(pair2.getKey());
-				
-				outLine += "\t" + pair2.getKey() + "\t" + pair2.getValue() + "\n";
+				if (currVpLine.arrayListWhereUsedAssy == null)
+					currVpLine.arrayListWhereUsedAssy = new ArrayList<String>();
+				currVpLine.arrayListWhereUsedAssy.add(pair2.getKey());
 			}
-			Collections.sort(currVpLine.arrayListWhereUsed, new ComparingID());
-//			Collections.sort(currVpLine.arrayListWhereUsed, new StrSort());
-
+			Iterator<Entry<String, Double>> it3 = currVpLine.mapWhereUsedKit.entrySet().iterator();
+			while (it3.hasNext()) {
+				Map.Entry<String, Double> pair2 = (Entry<String, Double>)it3.next();
+				if (currVpLine.arrayListWhereUsedKit == null)
+					currVpLine.arrayListWhereUsedKit = new ArrayList<String>();
+				currVpLine.arrayListWhereUsedKit.add(pair2.getKey());
+			}
+			Collections.sort(currVpLine.arrayListWhereUsedAssy, new ComparingID());
+			Collections.sort(currVpLine.arrayListWhereUsedKit, new ComparingID());
 			currVpLine.makeOneStringFromWhereUsedMapAndQty();
 		}
-//		Collections.sort(listOfOcc, new VPLinesSort(Field.NAME));
 		if (listOfOcc != null)
 			Collections.sort(listOfOcc, new ComparingLines());
 		if (listOfInnerVP != null) {
@@ -490,10 +531,10 @@ public class DataReader
 			System.out.println("size of list of inner VP: " + listOfInnerVP.size());
 		}
 		
-		
 		if (listOfOcc != null)
 			vpTable.fillGridVp(listOfOcc);
 		if (listOfInnerVP != null)
 			vpTable.fillGridVp(listOfInnerVP);
+		System.out.println("VPTABLESIZE" + vpTable.getRowCount());
 	}
 }

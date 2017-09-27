@@ -24,7 +24,7 @@ public class LineUtil
 		}
 	}
 	
-	static int getEndPositionForFittedLine(String inLine, double maxWidth) {
+	public static int getEndPositionForFittedLine(String inLine, double maxWidth) {
 		int position = 0;
 		
 		if (((position = inLine.indexOf("\n")) > 0) && (getWidthOfLine(inLine.substring(0, position)) < maxWidth)) {

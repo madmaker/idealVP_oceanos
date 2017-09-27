@@ -44,7 +44,6 @@ public class XmlBuilder
 	private int currentPageNum = 1;
 	private int page = 0;
 	public static int line = 0;
-	private Map<String, String> form_block;
 	
 	private Report report;
 	private ReportLineXMLRepresentation reportLineXMLRepresentation;
@@ -55,7 +54,6 @@ public class XmlBuilder
 		this.configuration = configuration;
 		this.report = report;
 		this.vpTable = report.vpTable;
-		form_block = new HashMap<String, String>();
 	}
 
 	public void setConfiguration(XmlBuilderConfiguration configuration)
@@ -118,7 +116,6 @@ public class XmlBuilder
 		node.setAttribute("TCHKDATE", report.stampData.techCheckDate.isEmpty()?"":DateUtil.parseDateFromTC(report.stampData.techCheckDate));
 		node.setAttribute("CTRLDATE", report.stampData.normCheckDate.isEmpty()?"":DateUtil.parseDateFromTC(report.stampData.normCheck));
 		node.setAttribute("APRDATE", report.stampData.approveDate.isEmpty()?"":DateUtil.parseDateFromTC(report.stampData.approveDate));
-		
 		node_root.appendChild(node);
 	}
 	
@@ -131,48 +128,30 @@ public class XmlBuilder
 	
 	public void processDataLegacy()
 	{
-		try {
-			if (vpTable.getRowCount() == 0) {
-				System.out.println("SPTABLE IS EMPTY");
+		try
+		{
+			if (vpTable.getRowCount() == 0)
 				throw new Exception("SPTABLE IS EMPTY");
-			}
 
 			DecimalFormat fmt = new DecimalFormat();
 			fmt.setMinimumIntegerDigits(2);
 
-			//document.appendChild(node_root);
-
-			Element node;
-
 			String val_cell;
-			Element node_block = null;
 
-			for (int i = 0; i < vpTable.getRowCount(); i++) {
-				Element node_occ = document.createElement("Occurrence");
+			for (int i = 0; i < vpTable.getRowCount(); i++)
+			{
+				node_occ = document.createElement("Occurrence");
 				if (vpTable.isTitle(i))
 					node_occ.setAttribute("font", "underline,bold");
 
 				
-				for (int j = 1; j <= 8; j++) {
+				for (int j = 1; j <= 10; j++) {
 					val_cell = (String) vpTable.getValueAt(i, j);
 					if ((val_cell == null) || (val_cell.length() <= 0))
 						continue;
 					node = document.createElement("Col_" + j);
 					if (vpTable.isTitle(i))
 						node.setAttribute("align", "center");
-//					if (vpTable.isTitle(i)) {
-//						node.setAttribute("align", "center");
-//					}
-//					if (j == 5 || j == 7 || j == 8) {
-//						node.setAttribute("align", "center");
-//					}
-//					if (j == 2 || j == 3) {
-//						node.setAttribute("align", "left");
-//					}
-//					if ((!val_cell.equals("")) && ((j == 6)))
-//						node.setAttribute("align", "right");
-//					if ((!val_cell.equals("")) && (j == 7))
-//						node.setAttribute("align", "left");
 					node.setTextContent(val_cell);
 					node_occ.appendChild(node);
 				}
@@ -181,24 +160,12 @@ public class XmlBuilder
 						|| (((i + 1) - (configuration.MaxLinesOnFirstPage + 1)) % (configuration.MaxLinesOnOtherPage) == 0)) {
 					System.out.println("new block creating");
 					node_block = document.createElement("Block");
-//					if (vpTable.isTitle(i))
-//						node_block.setAttribute("end_page", "false");
 					page++;
 				}
 				node_block.appendChild(node_occ);
 				node_root.appendChild(node_block);
 			}
 
-			node = document.createElement("Izdelie_osnovnai_nadpis");
-			
-			//form_block = getFormerBlockAttr(topIR);
-			Set<String> keys = form_block.keySet();
-			for (String idx_form_block : keys)
-				if (form_block.get(idx_form_block) != null)
-					node.setAttribute(idx_form_block, form_block.get(idx_form_block));
-			
-			node_root.appendChild(node);
-			
 			vpTable.clear();
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
