@@ -1,31 +1,17 @@
 package ru.idealplm.vp.oceanos.handlers;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import com.teamcenter.rac.aifrcp.AIFUtility;
-import com.teamcenter.rac.kernel.TCComponentBOMLine;
-import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.rac.kernel.TCSession;
-import com.teamcenter.rac.pse.plugin.Activator;
-import com.teamcenter.services.rac.core.DataManagementService;
 
-import ru.idealplm.pm.vp2g.ErrorListDialog;
 import ru.idealplm.vp.oceanos.core.VP;
 import ru.idealplm.vp.oceanos.core.VPSettings;
-import ru.idealplm.vp.oceanos.core.VPValidator;
-import ru.idealplm.vp.oceanos.data.VPBlock;
-import ru.idealplm.vp.oceanos.gui.InformMessageBox;
 import ru.idealplm.vp.oceanos.gui.VPDialog;
 
 public class VPHandler extends AbstractHandler

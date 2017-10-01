@@ -2,7 +2,7 @@ package ru.idealplm.vp.oceanos.core;
 
 import java.io.File;
 
-import ru.idealplm.vp.oceanos.data.VPTable;
+import ru.idealplm.vp.oceanos.data.ReportLineList;
 
 public class Report
 {
@@ -16,7 +16,7 @@ public class Report
 	
 	public ReportType type;
 	public ReportConfiguration configuration;
-	public VPTable vpTable;
+	public ReportLineList linesList;
 	public File data;
 	public File report;
 	public StampData stampData;
@@ -25,7 +25,7 @@ public class Report
 	public Report()
 	{
 		stampData = new StampData();
-		vpTable = new VPTable();
+		linesList = new ReportLineList();
 	}
 	
 	public void isDataValid()

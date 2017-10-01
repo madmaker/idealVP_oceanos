@@ -2,14 +2,14 @@ package ru.idealplm.vp.oceanos.xml;
 
 import java.util.ArrayList;
 
-/*import ru.idealplm.vp.oceanos.core.Report.FormField;
+import ru.idealplm.vp.oceanos.core.Report.FormField;
 import ru.idealplm.vp.oceanos.data.ReportLine;
 import ru.idealplm.vp.oceanos.data.ReportLineOccurence;
-import ru.idealplm.vp.oceanos.util.LineUtil;*/
+import ru.idealplm.vp.oceanos.util.LineUtil;
 
 public class ReportLineXMLRepresentation
 {
-	/*public ReportLine reportLine;
+	public ReportLine reportLine;
 	public ArrayList<String> nameLines;
 	public ArrayList<ReportLineOccurenceXmlRepresentation> occurences;
 	private int lineHeight = 1;
@@ -26,18 +26,18 @@ public class ReportLineXMLRepresentation
 		calcLineHeight();
 	}
 	
-	public void calcTotalQuantity()
+	/*public void calcTotalQuantity()
 	{
 		for(ReportLineOccurenceXmlRepresentation occurence : occurences)
 		{
-			totalQuantity += occurence.occurence.quantity;
+			totalQuantity += occurence.occurence.getTotalQuantity();
 		}
 	}
 	
 	public int getTotalQuantity()
 	{
 		return totalQuantity;
-	}
+	}*/
 	
 	public int getLineHeight()
 	{
@@ -50,5 +50,5 @@ public class ReportLineXMLRepresentation
 		nameLines = LineUtil.getFittedLines(reportLine.name, XmlBuilderConfiguration.columnLengths.get(FormField.NAME));
 		lineHeight = nameLines.size();
 		return lineHeight;
-	}*/
+	}
 }

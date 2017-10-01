@@ -2,13 +2,13 @@ package ru.idealplm.vp.oceanos.xml;
 
 import java.util.ArrayList;
 
-/*import ru.idealplm.vp.oceanos.core.Report.FormField;
+import ru.idealplm.vp.oceanos.core.Report.FormField;
 import ru.idealplm.vp.oceanos.data.ReportLineOccurence;
-import ru.idealplm.vp.oceanos.util.LineUtil;*/
+import ru.idealplm.vp.oceanos.util.LineUtil;
 
 public class ReportLineOccurenceXmlRepresentation
 {
-	/*public ReportLineOccurence occurence;
+	public ReportLineOccurence occurence;
 	public ArrayList<String> remarkLines;
 	private int lineHeight = 1;
 	
@@ -29,5 +29,5 @@ public class ReportLineOccurenceXmlRepresentation
 	public int getLineHeight()
 	{
 		return lineHeight;
-	}*/
+	}
 }

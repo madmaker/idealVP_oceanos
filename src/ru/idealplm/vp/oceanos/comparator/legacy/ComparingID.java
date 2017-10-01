@@ -1,4 +1,4 @@
-package ru.idealplm.vp.oceanos.comparator;
+package ru.idealplm.vp.oceanos.comparator.legacy;
 
 import java.util.ArrayList;
 import java.util.Comparator;

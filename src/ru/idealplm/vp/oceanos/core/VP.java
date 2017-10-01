@@ -15,8 +15,9 @@ import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.rac.kernel.TCPreferenceService;
 import com.teamcenter.rac.pse.plugin.Activator;
 
+import ru.idealplm.vp.oceanos.core.DataReader;
+import ru.idealplm.vp.oceanos.core.Report;
 import ru.idealplm.vp.oceanos.core.Report.ReportType;
-import ru.idealplm.vp.oceanos.data.VPBlock;
 import ru.idealplm.vp.oceanos.handlers.VPHandler;
 import ru.idealplm.vp.oceanos.xml.ExcelReportBuilder;
 import ru.idealplm.vp.oceanos.xml.PDFReportBuilder;
@@ -39,7 +40,6 @@ public class VP
 	public static ErrorList errorList;
 	public Report report;
 	private DataReader dataReader;
-	private Map<Integer, VPBlock> mapSection = null;
 	
 	public static TCPreferenceService preferenceService = VPHandler.session.getPreferenceService();
 	
@@ -83,7 +83,7 @@ public class VP
 	public void buildXmlFile()
 	{
 		System.out.println("@@@ BUILDING XML FILE @@@");
-		XmlBuilderConfiguration A3xmlBuilderConfiguration = new XmlBuilderConfiguration(24, 29);
+		XmlBuilderConfiguration A3xmlBuilderConfiguration = new XmlBuilderConfiguration(23, 29);
 		XmlBuilderConfiguration.MaxWidthGlobalRemark = 474;
 
 		XmlBuilder xmlBuilder = new XmlBuilder(A3xmlBuilderConfiguration, report);
@@ -95,7 +95,6 @@ public class VP
 	public void prepareData()
 	{
 		System.out.println("@@@ PREPARING DATA @@@");
-		dataReader.prepareData();
 	}
 
 	public void buildReportFile()
