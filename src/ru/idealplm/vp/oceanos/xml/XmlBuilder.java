@@ -141,7 +141,7 @@ public class XmlBuilder
 		System.out.println("XML: SIZE" + report.linesList.getSortedList().size());
 		for(ReportLine line : report.linesList.getSortedList())
 		{
-			System.out.println("XML: processing line..." + line.name);
+			System.out.println("XML: processing line..." + line.fullName);
 			if(!line.isReportable) continue;
 			System.out.println("XML: processing reportable line...");
 			ReportLineXMLRepresentation reportLineXMLRepresentation = new ReportLineXMLRepresentation(line);
@@ -183,7 +183,7 @@ public class XmlBuilder
 		for(int i = 0; i < totalHeight; i++)
 		{
 			node_occ = document.createElement("Occurrence");
-			System.out.println(line.reportLine.name + " " + currentOccurenceNumber + " lh" + lineHeight + " os" + line.occurences.size() + " th" + totalHeight + " oh" + occurencesHeight);
+			System.out.println(line.reportLine.shortName + " " + currentOccurenceNumber + " lh" + lineHeight + " os" + line.occurences.size() + " th" + totalHeight + " oh" + occurencesHeight);
 			// If it is the first line, we print first line info and increment currentLine number
 			if(i==0)
 			{
@@ -208,10 +208,10 @@ public class XmlBuilder
 				node.setTextContent(line.reportLine.shippingDocument);
 				node_occ.appendChild(node);
 				// Supplier
-				node = document.createElement("Col_" + 5);
-				node.setAttribute("align", "left");
-				node.setTextContent(line.reportLine.supplier);
-				node_occ.appendChild(node);
+				//node = document.createElement("Col_" + 5);
+				//node.setAttribute("align", "left");
+				//node.setTextContent(line.reportLine.provider);
+				//node_occ.appendChild(node);
 			} else if (lineHeight>i && lineHeight <= totalHeight) {
 				// Line number
 				node = document.createElement("Col_" + 1);

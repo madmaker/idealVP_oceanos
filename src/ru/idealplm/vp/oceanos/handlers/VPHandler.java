@@ -41,6 +41,7 @@ public class VPHandler extends AbstractHandler
 		vp.prepareData();
 		vp.buildReportFile();
 		vp.uploadReportFile();
+		vp.openReportFile();
 		
 		return null;
 	}

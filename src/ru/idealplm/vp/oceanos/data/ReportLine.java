@@ -13,10 +13,12 @@ public class ReportLine
 	public boolean isReportable = false;
 	public ReportLineType type;
 	public String uid;
-	public String name;
+	public String fullName;
+	public String shortName;
 	public String id;
 	public String shippingDocument;
-	public String supplier;
+	public String provider;
+	public String price;
 	private int totalQuantity = 0;
 	
 	public enum ReportLineType {
@@ -25,10 +27,9 @@ public class ReportLine
 	
 	private HashMap<String, ReportLineOccurence> occurences;
 	
-	public ReportLine(ReportLineType type, String name)
+	public ReportLine(ReportLineType type)
 	{
 		this.type = type;
-		this.name = name;
 		this.occurences = new HashMap<String, ReportLineOccurence>(1);
 		if(type == ReportLineType.COMMERCIAL) isReportable = true;
 	}

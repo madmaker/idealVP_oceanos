@@ -21,3 +21,5 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Import-Package: org.apache.avalon.framework.configuration
 Bundle-Activator: ru.idealplm.vp.oceanos.handlers.Activator
+Bundle-ClassPath: lib/poi-3.17.jar,
+ .

@@ -13,6 +13,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
+import com.teamcenter.rac.kernel.TCComponentForm;
 import com.teamcenter.rac.kernel.TCComponentItem;
 import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.services.rac.cad.StructureManagementService;
@@ -46,7 +47,7 @@ public class DataReader
 	private ReportLineList lineList;
 	private StructureManagementService smsService = StructureManagementService.getService(VPHandler.session);
 	private ProgressMonitorDialog pd;
-	private String blPropertyNames[] = {"bl_item_object_type", "bl_Part_oc9_TypeOfPart", "bl_quantity", "bl_item_item_id", "Oc9_Note", "bl_item_object_name"};
+	private String blPropertyNames[] = {"bl_item_object_type", "bl_Part_oc9_TypeOfPart", "bl_quantity", "bl_item_item_id", "Oc9_Note", "bl_item_object_name", "Oc9_AdjustFactor"};
 	private String blPropertyValues[];
 	private ReportLine emptyLine;
 	private ReportLineOccurence emptyOccurence;
@@ -70,7 +71,7 @@ public class DataReader
 		this.stampData = vp.report.stampData;
 		this.lineList = vp.report.linesList;
 		this.pd = vp.progressMonitor;
-		emptyLine = new ReportLine(ReportLineType.NONE, "");
+		emptyLine = new ReportLine(ReportLineType.NONE);
 		emptyOccurence = new ReportLineOccurence(emptyLine, null);
 		emptyLine.addOccurence(emptyOccurence);
 		topOccurence = readBomLineData(VP.topBOMLine, emptyOccurence);
@@ -233,15 +234,27 @@ public class DataReader
 		ReportLineOccurence resultOccurence = emptyOccurence;
 		try{
 			int quantity = blPropertyValues[2].trim().isEmpty()?1:Integer.parseInt(blPropertyValues[2]);
-			ReportLine line = new ReportLine(getTypeOfLine(), blPropertyValues[5]);
+			ReportLine line = new ReportLine(getTypeOfLine());
 			line.uid = bomLine.getItem().getUid();
 			line.id = blPropertyValues[3];
-			if(line.type==ReportLineType.DOCUMENT) line.name = "Ведомость покупных\n"+line.name;
-			System.out.println("new line for "+line.name);
+			TCComponentForm form1C = get1CForm(bomLine.getItem());
+			if(form1C!=null)
+			{
+				System.out.println("FORM EXISTS");
+				line.fullName = form1C.getProperty("oc9_RightName");
+				System.out.println("new line for "+line.fullName);
+				if(line.type==ReportLineType.DOCUMENT) line.fullName = "Ведомость покупных\n"+line.fullName;
+				//line.id = form1C.getProperty("oc9_Cod1C");
+				line.provider = form1C.getProperty("oc9_Provider");
+				line.shippingDocument = form1C.getProperty("oc9_ShippingDocument");
+				line.price = form1C.getProperty("oc9_Price");
+				line.shortName = getShortName(line.fullName, line.id, line.provider);
+			}
 			resultOccurence = new ReportLineOccurence(line, parentOccurence);
 			resultOccurence.setQuantity(quantity);
 			resultOccurence.bomLine = bomLine;
 			resultOccurence.remark = blPropertyValues[4];
+			resultOccurence.reserveFactor = Double.parseDouble(blPropertyValues[6]);
 			line.addOccurence(resultOccurence);
 			lineList.addLine(line);
 		} catch (Exception ex) 
@@ -267,6 +280,25 @@ public class DataReader
 			ex.printStackTrace();
 		}
 		return resultOccurence;
+	}
+	
+	public TCComponentForm get1CForm(TCComponentItem item)
+	{
+		TCComponentForm form1C = null;
+		try{
+			form1C = (TCComponentForm) item.getRelatedComponent("Oc9_Cod1CRel");
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+		return form1C;
+	}
+	
+	public String getShortName(String fullName, String code, String provider)
+	{
+		String shortName = fullName.replace(code, "");
+		shortName = shortName.replace(provider, "");
+		shortName = shortName.replaceAll("[\\s]{2,}", " ").trim();
+		return shortName;
 	}
 	
 	public boolean hasValidType(String itemType, String partType)
@@ -345,7 +377,7 @@ public class DataReader
 	{
 		for(ReportLine line : lineList.getSortedList())
 		{
-			System.out.println("line " + line.name);
+			System.out.println("line " + line.fullName);
 			for(ReportLineOccurence occurence : line.occurences())
 			{
 				System.out.println("occurence " + occurence.getParentItemId());

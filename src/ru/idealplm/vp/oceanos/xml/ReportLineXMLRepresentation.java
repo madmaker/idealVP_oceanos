@@ -26,19 +26,6 @@ public class ReportLineXMLRepresentation
 		calcLineHeight();
 	}
 	
-	/*public void calcTotalQuantity()
-	{
-		for(ReportLineOccurenceXmlRepresentation occurence : occurences)
-		{
-			totalQuantity += occurence.occurence.getTotalQuantity();
-		}
-	}
-	
-	public int getTotalQuantity()
-	{
-		return totalQuantity;
-	}*/
-	
 	public int getLineHeight()
 	{
 		return lineHeight;
@@ -47,7 +34,7 @@ public class ReportLineXMLRepresentation
 	private int calcLineHeight()
 	{
 		nameLines = new ArrayList<String>(1);
-		nameLines = LineUtil.getFittedLines(reportLine.name, XmlBuilderConfiguration.columnLengths.get(FormField.NAME));
+		nameLines = LineUtil.getFittedLines(reportLine.shortName, XmlBuilderConfiguration.columnLengths.get(FormField.NAME));
 		lineHeight = nameLines.size();
 		return lineHeight;
 	}

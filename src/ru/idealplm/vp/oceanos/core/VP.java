@@ -1,6 +1,8 @@
 package ru.idealplm.vp.oceanos.core;
 
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.UUID;
@@ -111,15 +113,33 @@ public class VP
 			System.out.println("@@@ BUILDING PDF REPORT @@@");
 			PDFReportBuilder reportBuilder = new PDFReportBuilder(report);
 			reportBuilder.buildReportStatic();
-		} else {
+		}
+		else
+		{
 			System.out.println("@@@ BUILDING EXCEL REPORT @@@");
 			ExcelReportBuilder reportBuilder = new ExcelReportBuilder(report);
+			reportBuilder.buildReport();
 		}
 	}
 	
 	public void uploadReportFile()
 	{
-		ReportUploader uploader = new ReportUploader(this);
-		uploader.addToTeamcenter();
+		if(report.type == ReportType.PDF)
+		{
+			ReportUploader uploader = new ReportUploader(this);
+			uploader.addToTeamcenter();
+		}
+	}
+	
+	public void openReportFile()
+	{
+		try
+		{
+			Desktop.getDesktop().open(new File(report.report.getAbsolutePath()));
+		} 
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 }

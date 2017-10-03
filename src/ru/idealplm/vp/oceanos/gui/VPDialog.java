@@ -17,6 +17,7 @@ import org.eclipse.swt.widgets.Text;
 
 import com.teamcenter.rac.util.DateButton;
 
+import ru.idealplm.vp.oceanos.core.Report.ReportType;
 import ru.idealplm.vp.oceanos.core.VP;
 import ru.idealplm.vp.oceanos.core.VPSettings;
 import ru.idealplm.vp.oceanos.util.DateUtil;
@@ -177,7 +178,7 @@ public class VPDialog extends Dialog
 	    tabSignatures.setText("\u041F\u043E\u0434\u043F\u0438\u0441\u0430\u043D\u0442\u044B");
 
 	    final Button button_ShowAdditionalForm = new Button(compositeMain, SWT.CHECK);
-		button_ShowAdditionalForm.setBounds(10, 122, 225, 16);
+		button_ShowAdditionalForm.setBounds(10, 163, 225, 16);
 		button_ShowAdditionalForm.setText("Показать дополнительную форму");
 		
 		text_PrimaryApp = new Text(compositeMain, SWT.BORDER);
@@ -208,6 +209,34 @@ public class VPDialog extends Dialog
 		label.setBounds(10, 10, 154, 13);
 		label.setText("\u041F\u0435\u0440\u0432\u0438\u0447\u043D\u0430\u044F \u043F\u0440\u0438\u043C\u0435\u043D\u044F\u0435\u043C\u043E\u0441\u0442\u044C");
 		
+		Label label_1 = new Label(compositeMain, SWT.NONE);
+		label_1.setBounds(10, 114, 76, 13);
+		label_1.setText("\u0422\u0438\u043F \u043E\u0442\u0447\u0435\u0442\u0430");
+		
+		final Button btnPdf = new Button(compositeMain, SWT.RADIO);
+		btnPdf.setSelection(true);
+		btnPdf.setBounds(10, 133, 54, 16);
+		btnPdf.setText("PDF");
+		
+		final Button btnExcel = new Button(compositeMain, SWT.RADIO);
+		btnExcel.setBounds(81, 133, 83, 16);
+		btnExcel.setText("EXCEL");
+		
+		btnPdf.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				button_ShowAdditionalForm.setEnabled(true);
+			}
+		});
+		
+		btnExcel.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				button_ShowAdditionalForm.setSelection(false);
+				button_ShowAdditionalForm.setEnabled(false);
+			}
+		});
+		
 		Composite composite = new Composite(shell, SWT.NONE);
 		composite.setBounds(0, 221, 414, 44);
 		
@@ -236,6 +265,14 @@ public class VPDialog extends Dialog
 				vp.report.stampData.techCheckDate = dateTCheck.getText().equals("Дата не установлена.")?"":fixData(dateTCheck.getText());
 				vp.report.stampData.normCheckDate = dateNCheck.getText().equals("Дата не установлена.")?"":fixData(dateNCheck.getText());
 				vp.report.stampData.approveDate = dateApprover.getText().equals("Дата не установлена.")?"":fixData(dateApprover.getText());
+				
+				if(btnPdf.getSelection())
+				{
+					vp.report.type = ReportType.PDF;
+				} else 
+				{
+					vp.report.type = ReportType.XLS;
+				}
 				
 				shell.dispose();
 				System.out.println("OK!");

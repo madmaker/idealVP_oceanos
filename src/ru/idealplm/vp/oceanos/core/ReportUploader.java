@@ -117,9 +117,10 @@ public class ReportUploader
 				String dataset_tool = "PDF_Reference";
 				currentVPDataset.setFiles(new String[] { renamedReportFile!=null?renamedReportFile.getAbsolutePath():vp.report.report.getAbsolutePath() }, new String[] { dataset_tool });
 				saveGeneralNoteFormInfo();
+				vp.report.report=renamedReportFile!=null?renamedReportFile:vp.report.report;
 				
-				currentVPDataset.getFiles("")[0].setReadOnly();
-				Desktop.getDesktop().open(currentVPDataset.getFiles("")[0]);
+				//currentVPDataset.getFiles("")[0].setReadOnly();
+				//Desktop.getDesktop().open(currentVPDataset.getFiles("")[0]);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
