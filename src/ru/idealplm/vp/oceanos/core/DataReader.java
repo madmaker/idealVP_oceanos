@@ -181,6 +181,7 @@ public class DataReader
 	{
 		ReportLineOccurence tempOccurence;
 		if(currentOccurence==null) return;
+		if(currentOccurence.reportLine.type==ReportLineType.DOCUMENT) return;
 
 		for (TCComponentBOMLine bomLine : getChildBOMLines(parentBomLine))
 		{
@@ -234,27 +235,33 @@ public class DataReader
 		ReportLineOccurence resultOccurence = emptyOccurence;
 		try{
 			int quantity = blPropertyValues[2].trim().isEmpty()?1:Integer.parseInt(blPropertyValues[2]);
-			ReportLine line = new ReportLine(getTypeOfLine());
+			ReportLine line = new ReportLine(getTypeOfLine(bomLine));
+			System.out.println("READER: new line for " + blPropertyValues[3]);
 			line.uid = bomLine.getItem().getUid();
 			line.id = blPropertyValues[3];
+			line.fullName = blPropertyValues[5];
+			line.shortName = "Empty";
 			TCComponentForm form1C = get1CForm(bomLine.getItem());
 			if(form1C!=null)
 			{
-				System.out.println("FORM EXISTS");
+				System.out.println("FORM EXISTS for " + blPropertyValues[3]);
 				line.fullName = form1C.getProperty("oc9_RightName");
-				System.out.println("new line for "+line.fullName);
-				if(line.type==ReportLineType.DOCUMENT) line.fullName = "Ведомость покупных\n"+line.fullName;
-				//line.id = form1C.getProperty("oc9_Cod1C");
+				line.productCode = form1C.getProperty("oc9_ProductCode");
 				line.provider = form1C.getProperty("oc9_Provider");
 				line.shippingDocument = form1C.getProperty("oc9_ShippingDocument");
 				line.price = form1C.getProperty("oc9_Price");
-				line.shortName = getShortName(line.fullName, line.id, line.provider);
+			} else {
+				System.out.println("FORM 1C id null for " + blPropertyValues[3]);
 			}
+			if(line.type==ReportLineType.DOCUMENT) {
+				line.fullName = "Ведомость покупных\n"+line.fullName;
+			}
+			line.shortName = getShortName(line.fullName, line.productCode, line.provider);
 			resultOccurence = new ReportLineOccurence(line, parentOccurence);
 			resultOccurence.setQuantity(quantity);
 			resultOccurence.bomLine = bomLine;
 			resultOccurence.remark = blPropertyValues[4];
-			resultOccurence.reserveFactor = Double.parseDouble(blPropertyValues[6]);
+			resultOccurence.reserveFactor = (blPropertyValues[6].trim().isEmpty() ? 0.0 : Double.parseDouble(blPropertyValues[6]));
 			line.addOccurence(resultOccurence);
 			lineList.addLine(line);
 		} catch (Exception ex) 
@@ -270,6 +277,9 @@ public class DataReader
 		try{
 			int quantity = blPropertyValues[2].trim().isEmpty()?1:Integer.parseInt(blPropertyValues[2]);
 			ReportLine line = lineList.getLine(bomLine.getItem().getUid());
+			System.out.println("READER: upd line for " + blPropertyValues[3] + " with quantity " + quantity);
+			if(line.type==ReportLineType.DOCUMENT) 
+				return null;
 			resultOccurence = new ReportLineOccurence(line, parentOccurence);
 			resultOccurence.setQuantity(quantity);
 			resultOccurence.bomLine = bomLine;
@@ -311,7 +321,7 @@ public class DataReader
 		return false;
 	}
 	
-	public ReportLineType getTypeOfLine()
+	public ReportLineType getTypeOfLine(TCComponentBOMLine bomLine)
 	{
 		ReportLineType type = ReportLineType.NONE;
 		try
@@ -328,11 +338,34 @@ public class DataReader
 			{
 				type = ReportLineType.KIT;
 			}
-		} catch (Exception ex) 
+			if(hasExistingVP(bomLine)) 
+				type = ReportLineType.DOCUMENT;
+		} 
+		catch (Exception ex) 
 		{
 			ex.printStackTrace();
 		}
 		return type;
+	}
+	
+	public boolean hasExistingVP(TCComponentBOMLine bomLine)
+	{
+		try
+		{
+			TCComponent[] documents = bomLine.getItemRevision().getRelatedComponents("Oc9_DocRel");
+			String IRid = bomLine.getItem().getProperty("item_id");
+			if(IRid.equals(VP.topBOMLineI.getProperty("item_id"))) return false; //TODO исправить эту жесть!
+			String id;
+			for(TCComponent document : documents){
+				id = document.getProperty("item_id");
+				if(id.equals(IRid + " ВП")){
+					return true;
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return false;
 	}
 	
 	private TCComponentBOMLine[] getChildBOMLines(TCComponentBOMLine parent)

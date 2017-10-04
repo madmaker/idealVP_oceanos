@@ -13,6 +13,7 @@ import org.apache.poi.ss.usermodel.Row;
 
 import ru.idealplm.vp.oceanos.core.Report;
 import ru.idealplm.vp.oceanos.data.ReportLine;
+import ru.idealplm.vp.oceanos.data.ReportLine.ReportLineType;
 import ru.idealplm.vp.oceanos.data.ReportLineOccurence;
 
 public class ExcelReportBuilder
@@ -43,7 +44,7 @@ public class ExcelReportBuilder
 		sheet = workbook.createSheet();
 		sheet.createFreezePane(0, 1);
 		
-		sheet.setColumnWidth(0, 5000);
+		sheet.setColumnWidth(0, 10000);
 		sheet.setColumnWidth(1, 5000);
 		sheet.setColumnWidth(2, 10000);
 		sheet.setColumnWidth(3, 5000);
@@ -75,12 +76,16 @@ public class ExcelReportBuilder
 	private void processData()
 	{
 		System.out.println("EXCEL: processData");
+		ReportLineType previousLineType = ReportLineType.NONE;
 		for(ReportLine line : report.linesList.getSortedList())
 		{
 			System.out.println("XML: processing line..." + line.fullName);
 			if(!line.isReportable) continue;
 			System.out.println("XML: processing reportable line...");
+			if(previousLineType!=ReportLineType.NONE && previousLineType!=line.type) 
+				addEmptyLines(1);
 			addLine(line);
+			previousLineType = line.type;
 		}
 	}
 	
@@ -89,6 +94,7 @@ public class ExcelReportBuilder
 		row = sheet.createRow(rowCount++);
 		cellName = row.createCell(0);
 		cellName.setCellValue(line.fullName);
+		cellName.setCellStyle(cellStyleRemarkRemark);
 		cellCode = row.createCell(1);
 		cellCode.setCellValue(line.id);
 		cellShippingDocument = row.createCell(2);
@@ -118,6 +124,14 @@ public class ExcelReportBuilder
 		
 		if(line.occurences().size()>1)
 			addTotalQuantityLine(line);
+	}
+	
+	private void addDocumentLine(ReportLine line)
+	{
+		row = sheet.createRow(rowCount++);
+		cellName = row.createCell(0);
+		cellName.setCellValue(line.fullName);
+		cellName.setCellStyle(cellStyleRemarkRemark);
 	}
 	
 	private void addHeader()
@@ -162,6 +176,14 @@ public class ExcelReportBuilder
 	{
 		cellQuantityTotal = row.createCell(8);
 		cellQuantityTotal.setCellValue(line.getTotalQuantity());
+	}
+	
+	private void addEmptyLines(int num)
+	{
+		for(int i = 0; i < num; i++)
+		{
+			row = sheet.createRow(rowCount++); 
+		}	
 	}
 	
 	private File writeToFile()

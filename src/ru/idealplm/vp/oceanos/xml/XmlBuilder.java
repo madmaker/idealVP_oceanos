@@ -2,6 +2,7 @@ package ru.idealplm.vp.oceanos.xml;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.RetentionPolicy;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -158,14 +159,21 @@ public class XmlBuilder
 			previousLineType = currentLineType;
 			
 			System.out.println("XML: adding line...");
-			addLine(reportLineXMLRepresentation);
+			if(currentLineType==ReportLineType.COMMERCIAL)
+			{
+				addCommercialLine(reportLineXMLRepresentation);
+			} 
+			else if (currentLineType==ReportLineType.DOCUMENT)
+			{
+				addDocumentLine(reportLineXMLRepresentation);
+			}
 		}
 		
 		if(getFreeLinesNum()>0) addEmptyLines(getFreeLinesNum());
 		node_root.appendChild(node_block);
 	}
 	
-	public void addLine(ReportLineXMLRepresentation line)
+	public void addCommercialLine(ReportLineXMLRepresentation line)
 	{
 		ReportLineOccurenceXmlRepresentation currentOccurence;
 		int lineHeight = line.getLineHeight();
@@ -300,6 +308,43 @@ public class XmlBuilder
 				node_occ.appendChild(node);
 				node_block.appendChild(node_occ);
 			}
+			currentLineNum++;
+		}
+	}
+	
+	public void addDocumentLine(ReportLineXMLRepresentation line)
+	{
+		int lineHeight = line.getLineHeight();
+		//node_occ = document.createElement("Occurrence");
+		for(int i = 0; i < lineHeight; i++)
+		{
+			node_occ = document.createElement("Occurrence");
+			// If it is the first line, we print first line info and increment currentLine number
+			if(i==0)
+			{
+				// Line number
+				node = document.createElement("Col_" + 1);
+				node.setAttribute("align", "center");
+				node.setTextContent(String.valueOf(currentLineNum));
+				node_occ.appendChild(node);
+				// Name
+				node = document.createElement("Col_" + 2);
+				node.setAttribute("align", "left");
+				node.setTextContent(line.nameLines.get(i));
+				node_occ.appendChild(node);
+			} else {
+				// Line number
+				node = document.createElement("Col_" + 1);
+				node.setAttribute("align", "center");
+				node.setTextContent(String.valueOf(currentLineNum));
+				node_occ.appendChild(node);
+				// If line name takes multiple lines, we print it
+				node = document.createElement("Col_" + 2);
+				node.setAttribute("align", "left");
+				node.setTextContent(line.nameLines.get(i));
+				node_occ.appendChild(node);
+			}
+			node_block.appendChild(node_occ);
 			currentLineNum++;
 		}
 	}
