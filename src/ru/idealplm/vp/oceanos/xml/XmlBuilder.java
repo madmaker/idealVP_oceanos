@@ -159,30 +159,33 @@ public class XmlBuilder
 			previousLineType = currentLineType;
 			
 			System.out.println("XML: adding line...");
-			if(currentLineType==ReportLineType.COMMERCIAL)
-			{
-				addCommercialLine(reportLineXMLRepresentation);
-			} 
-			else if (currentLineType==ReportLineType.DOCUMENT)
-			{
-				addDocumentLine(reportLineXMLRepresentation);
-			}
+			addLine(reportLineXMLRepresentation);
 		}
 		
 		if(getFreeLinesNum()>0) addEmptyLines(getFreeLinesNum());
 		node_root.appendChild(node_block);
 	}
 	
+	public void addLine(ReportLineXMLRepresentation line)
+	{
+		if(line.reportLine.type==ReportLineType.COMMERCIAL)
+		{
+			addCommercialLine(line);
+		} 
+		else if (line.reportLine.type==ReportLineType.DOCUMENT)
+		{
+			addDocumentLine(line);
+		}
+	}
+	
 	public void addCommercialLine(ReportLineXMLRepresentation line)
 	{
 		ReportLineOccurenceXmlRepresentation currentOccurence;
 		int lineHeight = line.getLineHeight();
-		//int totalQuantity = 0;
 		int occurencesHeight = 0;
 		for(ReportLineOccurenceXmlRepresentation occurence:line.occurences) {
 			System.out.println("incrementing with " + occurence.getLineHeight());
 			occurencesHeight += occurence.getLineHeight();
-			//totalQuantity += occurence.occurence.getTotalQuantity();
 		}
 		int totalHeight = lineHeight>occurencesHeight?lineHeight:occurencesHeight;
 		int currentOccurenceNumber = 0;
@@ -315,7 +318,6 @@ public class XmlBuilder
 	public void addDocumentLine(ReportLineXMLRepresentation line)
 	{
 		int lineHeight = line.getLineHeight();
-		//node_occ = document.createElement("Occurrence");
 		for(int i = 0; i < lineHeight; i++)
 		{
 			node_occ = document.createElement("Occurrence");

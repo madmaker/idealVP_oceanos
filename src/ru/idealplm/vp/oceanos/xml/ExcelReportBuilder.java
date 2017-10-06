@@ -79,9 +79,9 @@ public class ExcelReportBuilder
 		ReportLineType previousLineType = ReportLineType.NONE;
 		for(ReportLine line : report.linesList.getSortedList())
 		{
-			System.out.println("XML: processing line..." + line.fullName);
+			System.out.println("EXCEL: processing line..." + line.fullName);
 			if(!line.isReportable) continue;
-			System.out.println("XML: processing reportable line...");
+			System.out.println("EXCEL: processing reportable line...");
 			if(previousLineType!=ReportLineType.NONE && previousLineType!=line.type) 
 				addEmptyLines(1);
 			addLine(line);
@@ -90,6 +90,15 @@ public class ExcelReportBuilder
 	}
 	
 	private void addLine(ReportLine line)
+	{
+		if(line.type==ReportLineType.COMMERCIAL)
+			addCommercialLine(line);
+		
+		if(line.type==ReportLineType.DOCUMENT)
+			addDocumentLine(line);
+	}
+	
+	private void addCommercialLine(ReportLine line)
 	{
 		row = sheet.createRow(rowCount++);
 		cellName = row.createCell(0);

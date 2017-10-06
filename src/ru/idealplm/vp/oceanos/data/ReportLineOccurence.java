@@ -12,7 +12,7 @@ public class ReportLineOccurence
 	public TCComponentBOMLine bomLine;
 	public int quantityAssy = 0;
 	public int quantityKit = 0;
-	public double reserveFactor = 0.1;
+	public double reserveFactor = 0.0;
 	public String remark = "";
 	
 	private ReportLineOccurence parent;
