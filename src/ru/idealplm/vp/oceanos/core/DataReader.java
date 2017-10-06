@@ -244,14 +244,14 @@ public class DataReader
 			TCComponentForm form1C = get1CForm(bomLine.getItem());
 			if(form1C!=null)
 			{
-				System.out.println("FORM EXISTS for " + blPropertyValues[3]);
+				System.out.println("READER: form 1c exists for " + blPropertyValues[3]);
 				line.fullName = form1C.getProperty("oc9_RightName");
 				line.productCode = form1C.getProperty("oc9_ProductCode");
 				line.provider = form1C.getProperty("oc9_Provider");
 				line.shippingDocument = form1C.getProperty("oc9_ShippingDocument");
 				line.price = form1C.getProperty("oc9_Price");
 			} else {
-				System.out.println("FORM 1C id null for " + blPropertyValues[3]);
+				System.out.println("READER: form 1c is null for " + blPropertyValues[3]);
 			}
 			if(line.type==ReportLineType.DOCUMENT) {
 				line.fullName = "Ведомость покупных\n"+line.fullName;
@@ -261,7 +261,7 @@ public class DataReader
 			resultOccurence.setQuantity(quantity);
 			resultOccurence.bomLine = bomLine;
 			resultOccurence.remark = blPropertyValues[4];
-			resultOccurence.reserveFactor = (blPropertyValues[6].trim().isEmpty() ? 0.0 : Double.parseDouble(blPropertyValues[6]));
+			resultOccurence.reserveFactor = parseAdjustValue(blPropertyValues[6]);
 			line.addOccurence(resultOccurence);
 			lineList.addLine(line);
 		} catch (Exception ex) 
@@ -404,6 +404,34 @@ public class DataReader
 		{
 			throw new CancellationException("Чтение данных отменено!");
 		}
+	}
+	
+	private double parseAdjustValue(String adjustValue)
+	{
+		adjustValue = adjustValue.trim();
+		if(adjustValue.isEmpty()) return 0;
+		
+		double result = 0.0;
+		
+		try
+		{
+			result = Double.parseDouble(adjustValue);
+		} 
+		catch (NumberFormatException ex1)
+		{
+			try
+			{
+				System.out.println("Failed to parseadjust value, another attempt...");
+				adjustValue = adjustValue.replaceAll(",", "\\.");
+				result = Double.parseDouble(adjustValue);
+			} 
+			catch (NumberFormatException ex2)
+			{
+				System.out.println("Failed to parse adjust value");
+				ex2.printStackTrace();
+			}
+		}
+		return result;
 	}
 	
 	private void printData()
