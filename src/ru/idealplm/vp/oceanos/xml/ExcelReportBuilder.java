@@ -105,7 +105,7 @@ public class ExcelReportBuilder
 		cellName.setCellValue(line.fullName);
 		cellName.setCellStyle(cellStyleRemarkRemark);
 		cellCode = row.createCell(1);
-		cellCode.setCellValue(line.id);
+		cellCode.setCellValue(line.productCode);
 		cellShippingDocument = row.createCell(2);
 		cellShippingDocument.setCellValue(line.shippingDocument);
 		cellProvider = row.createCell(3);

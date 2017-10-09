@@ -119,7 +119,7 @@ public class XmlBuilder
 	private void addExtraData()
 	{
 		node = document.createElement("FileData");
-		node.setAttribute("FileName", "Файл ведомости спецификаций: " + report.stampData.id+".pdf/" + report.stampData.reportRevNo);
+		node.setAttribute("FileName", "Файл ведомости покупных изделий: " + report.stampData.id+".pdf/" + report.stampData.reportRevNo);
 		node_root.appendChild(node);
 	}
 	
@@ -208,10 +208,10 @@ public class XmlBuilder
 				node.setAttribute("align", "left");
 				node.setTextContent(line.nameLines.get(i));
 				node_occ.appendChild(node);
-				// Id of the line
+				// Product code
 				node = document.createElement("Col_" + 3);
 				node.setAttribute("align", "left");
-				node.setTextContent(line.reportLine.id);
+				node.setTextContent(line.reportLine.productCode);
 				node_occ.appendChild(node);
 				// Shipping document id
 				node = document.createElement("Col_" + 4);
@@ -358,7 +358,6 @@ public class XmlBuilder
 		node_root.appendChild(node_block);
 		currentLineNum = 1;
 		currentPageNum += 1;
-		addEmptyLines(1);
 	}
 	
 	/*public void addBasicLine(BasicXmlLine line)
