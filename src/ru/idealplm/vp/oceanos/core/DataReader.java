@@ -421,14 +421,13 @@ public class DataReader
 		{
 			try
 			{
-				System.out.println("Failed to parseadjust value, another attempt...");
+				System.out.println("Failed to parse adjust value, another attempt...");
 				adjustValue = adjustValue.replaceAll(",", "\\.");
 				result = Double.parseDouble(adjustValue);
 			} 
 			catch (NumberFormatException ex2)
 			{
-				System.out.println("Failed to parse adjust value");
-				ex2.printStackTrace();
+				System.out.println("Failed to parse adjust value:"+adjustValue);
 			}
 		}
 		return result;

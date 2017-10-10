@@ -22,7 +22,7 @@ public class ReportLineOccurenceXmlRepresentation
 	{
 		remarkLines = new ArrayList<String>(1);
 		remarkLines = LineUtil.getFittedLines(occurence.remark, XmlBuilderConfiguration.columnLengths.get(FormField.REMARK));
-		lineHeight = remarkLines.size()==0?1:remarkLines.size();
+		lineHeight = remarkLines.size()==0 ? 1 : remarkLines.size();
 		return lineHeight;
 	}
 	

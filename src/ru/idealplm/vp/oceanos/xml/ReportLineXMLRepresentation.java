@@ -11,9 +11,11 @@ public class ReportLineXMLRepresentation
 {
 	public ReportLine reportLine;
 	public ArrayList<String> nameLines;
+	public ArrayList<String> productCodeLines;
+	public ArrayList<String> shippingDocumentLines;
+	public ArrayList<String> providerLines;
 	public ArrayList<ReportLineOccurenceXmlRepresentation> occurences;
 	private int lineHeight = 1;
-	private int totalQuantity = 0;
 	
 	public ReportLineXMLRepresentation(ReportLine reportLine)
 	{
