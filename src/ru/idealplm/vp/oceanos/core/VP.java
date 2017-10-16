@@ -7,8 +7,6 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.UUID;
 
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
 import com.teamcenter.rac.kernel.TCComponentItem;
@@ -38,7 +36,6 @@ public class VP
 	public static TCComponentItemRevision vpIR;
 	public static TCComponent generalNoteForm;
 	
-	public ProgressMonitorDialog progressMonitor;
 	public static ErrorList errorList;
 	public Report report;
 	private DataReader dataReader;

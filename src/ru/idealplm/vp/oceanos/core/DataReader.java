@@ -1,16 +1,10 @@
 package ru.idealplm.vp.oceanos.core;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CancellationException;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-
+import com.teamcenter.rac.aif.kernel.AIFComponentContext;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
 import com.teamcenter.rac.kernel.TCComponentForm;
@@ -46,7 +40,6 @@ public class DataReader
 	private StampData stampData;
 	private ReportLineList lineList;
 	private StructureManagementService smsService = StructureManagementService.getService(VPHandler.session);
-	private ProgressMonitorDialog pd;
 	private String blPropertyNames[] = {"bl_item_object_type", "bl_Part_oc9_TypeOfPart", "bl_quantity", "bl_item_item_id", "Oc9_Note", "bl_item_object_name", "Oc9_AdjustFactor"};
 	private String blPropertyValues[];
 	private ReportLine emptyLine;
@@ -70,7 +63,6 @@ public class DataReader
 		this.vp = vp;
 		this.stampData = vp.report.stampData;
 		this.lineList = vp.report.linesList;
-		this.pd = vp.progressMonitor;
 		emptyLine = new ReportLine(ReportLineType.NONE);
 		emptyOccurence = new ReportLineOccurence(emptyLine, null);
 		emptyLine.addOccurence(emptyOccurence);
@@ -155,45 +147,31 @@ public class DataReader
 	
 	public void readData()
 	{
-		try
-		{
-			pd.run(true, true, new IRunnableWithProgress() {
-				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
-				{
-					monitor.beginTask("Чтение данных", 100);
-					readBomData(VP.topBOMLine, topOccurence, emptyOccurence, monitor);
-					monitor.done();
-				}
-			});
-		}
-		catch (InvocationTargetException | InterruptedException e)
-		{
-			e.printStackTrace();
-		}
-		catch (CancellationException ex)
-		{
-			VPSettings.isCancelled = true;
-			System.out.println(ex.getMessage());
-		}
+		readBomData(VP.topBOMLine, topOccurence, emptyOccurence);
 	}
 
-	private void readBomData(TCComponentBOMLine parentBomLine, ReportLineOccurence currentOccurence, ReportLineOccurence parentOccurence, IProgressMonitor monitor)
+	private void readBomData(TCComponentBOMLine parentBomLine, ReportLineOccurence currentOccurence, ReportLineOccurence parentOccurence)
 	{
 		ReportLineOccurence tempOccurence;
 		if(currentOccurence==null) return;
 		if(currentOccurence.reportLine.type==ReportLineType.DOCUMENT) return;
 
-		for (TCComponentBOMLine bomLine : getChildBOMLines(parentBomLine))
+		TCComponentBOMLine[] childLines = unpackBomLines(parentBomLine);
+		for (TCComponentBOMLine bomLine : childLines)
 		{
 			tempOccurence = readBomLineData(bomLine, currentOccurence);
 			if(tempOccurence!=null)
 				currentOccurence.addChild(tempOccurence);
-			checkIfMonitorIsCancelled(monitor);
+			// TODO check if cancelled
 		}
 		for(ReportLineOccurence child : currentOccurence.getChildren())
 		{
-			readBomData(child.bomLine, child, currentOccurence, monitor);
-			checkIfMonitorIsCancelled(monitor);
+			readBomData(child.bomLine, child, currentOccurence);
+			// TODO check if cancelled
+		}
+		for (int i = 0; i < childLines.length; i++)	{
+			TCComponentBOMLine currBOMLine = childLines[i];
+			packBomLines(currBOMLine);
 		}
 	}
 	
@@ -368,6 +346,44 @@ public class DataReader
 		return false;
 	}
 	
+	private TCComponentBOMLine[] unpackBomLines(TCComponentBOMLine parent)
+	{
+		try
+		{
+			AIFComponentContext[] childArray = parent.getChildren();
+			for (int i=0; i < childArray.length; i++)
+				if (((TCComponentBOMLine)childArray[i].getComponent()).isPacked()) {
+					((TCComponentBOMLine)childArray[i].getComponent()).unpack();
+				}
+			
+			parent.refresh();
+			childArray = parent.getChildren(); 
+			ArrayList<TCComponentBOMLine> arrayListContext = null;
+			
+			if (childArray.length > 0)
+				arrayListContext = new ArrayList<TCComponentBOMLine>();
+	
+			for (int i=0; i < childArray.length; i++)
+				arrayListContext.add((TCComponentBOMLine)childArray[i].getComponent());
+			return arrayListContext.toArray(new TCComponentBOMLine[arrayListContext.size()]);
+		}
+		catch (Exception ex) {
+			ex.printStackTrace();
+			return new TCComponentBOMLine[0];
+		}
+	}
+	
+	private void packBomLines(TCComponentBOMLine bomLine)
+	{
+		try
+		{
+			bomLine.pack();
+		}
+		catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
 	private TCComponentBOMLine[] getChildBOMLines(TCComponentBOMLine parent)
 	{
 		TCComponentBOMLine[] childLines = null;
@@ -396,14 +412,6 @@ public class DataReader
 		if(childLines==null) childLines = new TCComponentBOMLine[0];
 		
 		return childLines;
-	}
-	
-	private void checkIfMonitorIsCancelled(IProgressMonitor monitor)
-	{
-		if (monitor.isCanceled())
-		{
-			throw new CancellationException("Чтение данных отменено!");
-		}
 	}
 	
 	private double parseAdjustValue(String adjustValue)

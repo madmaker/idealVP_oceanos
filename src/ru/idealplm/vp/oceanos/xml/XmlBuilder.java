@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -139,8 +140,8 @@ public class XmlBuilder
 		}
 		ReportLineType previousLineType = ReportLineType.NONE;
 		
-		System.out.println("XML: SIZE" + report.linesList.getSortedList().size());
-		for(ReportLine line : report.linesList.getSortedList())
+		ArrayList<ReportLine> sortedLines = report.linesList.getSortedList();
+		for(ReportLine line : sortedLines)
 		{
 			System.out.println("XML: processing line..." + line.fullName);
 			if(!line.isReportable) continue;
