@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
+
 import ru.idealplm.vp.oceanos.comparator.ReportLineOccurencesComparator;
 
 public class ReportLine
@@ -11,6 +13,7 @@ public class ReportLine
 	private static ReportLineOccurencesComparator reportLineOccurencessComparator = new ReportLineOccurencesComparator();
 	
 	public boolean isReportable = false;
+	public boolean isCached = false;
 	public ReportLineType type;
 	public String uid = "";
 	public String fullName = "";
@@ -21,17 +24,30 @@ public class ReportLine
 	public String id = "";
 	public String price = "";
 	private int totalQuantity = 0;
+	private TCComponentBOMLine bomLine;
 	
 	public enum ReportLineType {
 		NONE, COMMERCIAL, ASSEMBLY, KIT, DOCUMENT
 	};
 	
 	private HashMap<String, ReportLineOccurence> occurences;
+	private HashMap<String, ReportLineOccurence> parentOccurences;
+	
+	public ReportLine(TCComponentBOMLine bomLine)
+	{
+		this.bomLine = bomLine;
+	}
+	
+	public void readBOMData()
+	{
+		
+	}
 	
 	public ReportLine(ReportLineType type)
 	{
 		this.type = type;
 		this.occurences = new HashMap<String, ReportLineOccurence>(1);
+		this.parentOccurences = new HashMap<String, ReportLineOccurence>(1);
 		if(type == ReportLineType.COMMERCIAL || type == ReportLineType.DOCUMENT) isReportable = true;
 	}
 	

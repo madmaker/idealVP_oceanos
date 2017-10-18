@@ -55,29 +55,21 @@ public class ReportUploader
 					renamedReportFile = new File(vp.report.data.getAbsolutePath().substring(0, vp.report.data.getAbsolutePath().lastIndexOf("_"))+".pdf");
 					Files.deleteIfExists(renamedReportFile.toPath());
 					vp.report.report.renameTo(renamedReportFile);
-					System.out.println(vp.report.report.getAbsolutePath());
-					System.out.println(renamedReportFile.getAbsolutePath());
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
 			}
 			if(VP.vpIR != null) {
-				System.out.println("+++++++++++  SPREV!=NULL");
 				currentVPDataset = deletePrevSpecDatasetOfKd();
 			} else if (VP.vpIR == null) {
-				System.out.println("+++++++++++  SPREV==NULL");
 				TCComponentItem kdDoc = findKDDocItem();
 				if (kdDoc == null) {
-					System.out.println("CREATING KD ITEM WITH FIRST ITEMREVISION + SignForm!");
 					TCComponentItemRevision newItemRev = (TCComponentItemRevision)createItem("Oc9_KD", VP.topBOMLineIR.getProperty("item_id") + " ВП",
 							VP.topBOMLineIR.getProperty("object_name"),
 							"Создано утилитой по генерации документа \"Ведомость покупных\"")[1];
 					VP.vpIR = newItemRev;
 				} else {
-					System.out.println("+++++++++++  KD!=NULL");
-					System.out.println(kdDoc.getProperty("item_id"));
 					if (isKdLastRevHasAssemblyRev(kdDoc)) {
-						System.out.println("REVISE AND REMOVE SP + SignForm...");
 						VP.vpIR = createNextRevisionBasedOn(getLastRevOfItem(kdDoc));
 						
 						if (VP.vpIR != null) {
@@ -85,7 +77,6 @@ public class ReportUploader
 							currentVPDataset = deletePrevSpecDatasetOfKd();
 						}
 					} else {
-						System.out.println("REPLACING LAST REVISION!");
 						VP.vpIR = kdDoc.getLatestItemRevision();
 						currentVPDataset = deletePrevSpecDatasetOfKd();
 					}
@@ -105,7 +96,6 @@ public class ReportUploader
 			if(currentVPDataset==null){
 				TCComponentDataset ds_new = createDatasetAndAddFile(vp.report.report.getAbsolutePath());
 				if (ds_new != null) {
-					System.out.println("Adding to item_id: " + VP.vpIR.getProperty("item_id"));
 					VP.vpIR.add("IMAN_specification", ds_new);
 					saveGeneralNoteFormInfo();
 					
@@ -113,7 +103,6 @@ public class ReportUploader
 					Desktop.getDesktop().open(ds_new.getFiles("")[0]);
 				}
 			} else {
-				System.out.println("SPEC DATASET IS NOT NULL");
 				String dataset_tool = "PDF_Reference";
 				currentVPDataset.setFiles(new String[] { renamedReportFile!=null?renamedReportFile.getAbsolutePath():vp.report.report.getAbsolutePath() }, new String[] { dataset_tool });
 				saveGeneralNoteFormInfo();
@@ -133,7 +122,6 @@ public class ReportUploader
 			TCComponent tempComp;
 			if((tempComp = VP.vpIR.getRelatedComponent("Oc9_SignRel"))!=null)
 			{
-				System.out.println("+++++FOUND SIGN FORM!!!!");
 				tempComp.setProperty("oc9_Designer", vp.report.stampData.design);
 				tempComp.setProperty("oc9_Check", vp.report.stampData.check);
 				tempComp.setProperty("oc9_TCheck", vp.report.stampData.techCheck);
@@ -170,14 +158,9 @@ public class ReportUploader
 		revInfo.baseItemRevision = itemRev;
 		ReviseResponse2 response = dmService.revise2(new ReviseInfo[] {revInfo});
 		
-		System.out.println("MAP SIZE = " + response.reviseOutputMap.size());
 		Iterator it = response.reviseOutputMap.entrySet().iterator();
 		if (it.hasNext()) {
-			System.out.println("trying to return itemRev...");
 			Map.Entry entry = (Entry) it.next();
-			System.out.println("Class NAME VALUE: " + entry.getValue().getClass().getName() + " = " + entry.getKey()
-					+ "\nClass NAME KEY: " + entry.getKey().getClass().getName()
-					);
 			out = ((ReviseOutput)entry.getValue()).newItemRev;
 		}
 		
@@ -222,10 +205,8 @@ public class ReportUploader
 		TCComponentItemRevision lastRev = getLastRevOfItem(kdDoc);
 		if (lastRev != null) {
 			AIFComponentContext[] relatedComp = lastRev.getRelated("TC_DrawingOf");
-			System.out.println("got " + relatedComp.length + " Specs from LAST REVISIONS");
 			
 			for (AIFComponentContext currConetext : relatedComp) {
-				System.out.println("TYPE: " + currConetext.getComponent().getType());
 				if (currConetext.getComponent().getType().equals("Oc9_CompanyPartRevision")) {
 					TCComponentItemRevision currItemRev = (TCComponentItemRevision) currConetext.getComponent(); 
 					if (currItemRev.getProperty("item_id").equals(lastRev.getProperty("item_id")))
@@ -233,7 +214,6 @@ public class ReportUploader
 				}
 			}
 		}
-		System.out.println("IS KD LAST REV HAS ASSEMBLY? >> " + out);
 		return out;
 	}
 	
@@ -281,13 +261,10 @@ public class ReportUploader
 		TCComponentDataset dataset = null;
 		for (AIFComponentContext compContext : VP.vpIR.getChildren())
 		{
-			System.out.println(">>> TYPE: " + compContext.getComponent().getProperty("object_type"));
 			if ((compContext.getComponent() instanceof TCComponentDataset) 
 					&& compContext.getComponent().getProperty("object_desc").equals("Ведомость покупных")) {
 				dataset = (TCComponentDataset)compContext.getComponent();
-				System.out.println("Deleting Spec Dataset Named Ref in KD");
 				dataset.removeFiles("ImanFile");
-				System.out.println("after destroying");
 			}
 		}
 		
@@ -299,13 +276,10 @@ public class ReportUploader
 		Map<Integer, TCComponentItemRevision> mapItemRevByRev = new HashMap<Integer, TCComponentItemRevision>();
 		ArrayList<Integer> revisions = new ArrayList<Integer>();
 		AIFComponentContext[] contextArray = item.getChildren();
-		System.out.println("Children of ITEM: " + contextArray.length);
 		for (int i=0; i<contextArray.length; i++) {
-			System.out.println("~~~~ TYPE: " + contextArray[i].getComponent().getType());
 			if (contextArray[i].getComponent().getType().equals("Oc9_KDRevision")) {
 				TCComponentItemRevision currItemRev = (TCComponentItemRevision)contextArray[i].getComponent();
 				if(currItemRev.getProperty("item_id").equals(item.getProperty("item_id"))) {
-					System.out.println("ADDING TO MAP!");
 					Integer rev = Integer.valueOf(currItemRev.getProperty("current_revision_id"));
 					mapItemRevByRev.put(rev, currItemRev);
 					revisions.add(rev);
@@ -316,7 +290,6 @@ public class ReportUploader
 		if (revisions.size() > 0) 
 			out = mapItemRevByRev.get(revisions.get(revisions.size()-1)); 
 		
-		System.out.println("returning: " + out.getProperty("item_id"));
 		return out;
 	}
 	
@@ -326,7 +299,6 @@ public class ReportUploader
 		for (AIFComponentContext currContext : itemRev4Delete) {
 			if (((TCComponentItemRevision)currContext.getComponent()).getProperty("item_id")
 					.equals(rev.getItem().getProperty("item_id") + " ВП")) {
-				System.out.println("~~~ Added to delete");
 				list4Removing.add((TCComponentItemRevision)currContext.getComponent());
 			}
 		}
@@ -340,7 +312,6 @@ public class ReportUploader
 		TCComponentItem[] items = itemType.findItems(criteria);
 		if (items != null && items.length > 0) {
 			for(TCComponentItem item : items){
-				System.out.println("Found item " + item.getProperty("item_id") + " of type " + item.getType());
 				if(item.getType().equals("Oc9_KD")){
 					result = item;
 					break;

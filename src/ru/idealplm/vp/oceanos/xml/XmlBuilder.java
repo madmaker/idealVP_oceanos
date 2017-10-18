@@ -2,12 +2,7 @@ package ru.idealplm.vp.oceanos.xml;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.RetentionPolicy;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,13 +17,10 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import com.teamcenter.rac.util.MessageBox;
-
 import ru.idealplm.vp.oceanos.data.ReportLine;
 import ru.idealplm.vp.oceanos.data.ReportLine.ReportLineType;
 import ru.idealplm.vp.oceanos.core.VPSettings;
 import ru.idealplm.vp.oceanos.core.Report;
-import ru.idealplm.vp.oceanos.core.Report.FormField;
 import ru.idealplm.vp.oceanos.util.DateUtil;
 
 public class XmlBuilder
@@ -126,16 +118,13 @@ public class XmlBuilder
 	
 	private void processData()
 	{
-		System.out.println("XML: processData");
 		if (node_block == null)
 		{
-			System.out.println("XML: first Block");
 			node_block = document.createElement("Block");
 			node_root.appendChild(node_block);
 		}
 		if(getFreeLinesNum() < 1)
 		{
-			System.out.println("XML: freeLinesNum < 1 -> newPage()");
 			newPage();
 		}
 		ReportLineType previousLineType = ReportLineType.NONE;
@@ -143,12 +132,9 @@ public class XmlBuilder
 		ArrayList<ReportLine> sortedLines = report.linesList.getSortedList();
 		for(ReportLine line : sortedLines)
 		{
-			System.out.println("XML: processing line..." + line.fullName);
 			if(!line.isReportable) continue;
-			System.out.println("XML: processing reportable line...");
 			ReportLineXMLRepresentation reportLineXMLRepresentation = new ReportLineXMLRepresentation(line);
 			int lineHeight = reportLineXMLRepresentation.getLineHeight();
-			System.out.println("XML: processing line with height... " + lineHeight);
 			if(getFreeLinesNum() < 1 + lineHeight) newPage();
 			ReportLineType currentLineType = line.type;
 			
@@ -159,7 +145,6 @@ public class XmlBuilder
 			}
 			previousLineType = currentLineType;
 			
-			System.out.println("XML: adding line...");
 			addLine(reportLineXMLRepresentation);
 		}
 		
@@ -185,7 +170,6 @@ public class XmlBuilder
 		int lineHeight = line.getLineHeight();
 		int occurencesHeight = 0;
 		for(ReportLineOccurenceXmlRepresentation occurence:line.occurences) {
-			System.out.println("incrementing with " + occurence.getLineHeight());
 			occurencesHeight += occurence.getLineHeight();
 		}
 		int totalHeight = lineHeight>occurencesHeight?lineHeight:occurencesHeight;
@@ -197,7 +181,6 @@ public class XmlBuilder
 		for(int i = 0; i < totalHeight; i++)
 		{
 			node_occ = document.createElement("Occurrence");
-			System.out.println(line.reportLine.shortName + " " + currentOccurenceNumber + " lh" + lineHeight + " os" + line.occurences.size() + " th" + totalHeight + " oh" + occurencesHeight);
 			// If it is the first line, we print first line info and increment currentLine number
 			if(i==0)
 			{
@@ -232,7 +215,6 @@ public class XmlBuilder
 				node.setAttribute("align", "center");
 				node.setTextContent(String.valueOf(currentLineNum));
 				node_occ.appendChild(node);
-				System.out.println("new line for name");
 				// If line name takes multiple lines, we print it
 				node = document.createElement("Col_" + 2);
 				node.setAttribute("align", "left");

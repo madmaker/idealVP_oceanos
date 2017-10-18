@@ -4,7 +4,7 @@ import java.util.Comparator;
 
 import ru.idealplm.vp.oceanos.data.ReportLine;
 
-public class ReportLinesComparator implements Comparator<ReportLine>
+public class ReportLineComparator implements Comparator<ReportLine>
 {
 	public int compare(ReportLine line0, ReportLine line1)
 	{

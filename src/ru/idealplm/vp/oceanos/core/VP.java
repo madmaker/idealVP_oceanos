@@ -4,7 +4,6 @@ import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.UUID;
 
 import com.teamcenter.rac.kernel.TCComponent;
@@ -25,6 +24,7 @@ import ru.idealplm.vp.oceanos.xml.PDFReportBuilderConfiguration;
 import ru.idealplm.vp.oceanos.xml.XmlBuilder;
 import ru.idealplm.vp.oceanos.xml.XmlBuilderConfiguration;
 
+@SuppressWarnings("restriction")
 public class VP
 {
 	public static final String CLIENT_ID = UUID.randomUUID().toString();
@@ -49,6 +49,7 @@ public class VP
 		report.type = ReportType.PDF;
 	}
 	
+	@SuppressWarnings("deprecation")
 	public void init()
 	{
 		try{
@@ -60,7 +61,7 @@ public class VP
 			dataReader = new DataReader(this);
 			
 			String[] emptyValues = {};
-			VPSettings.nonbreakableWords = preferenceService.getStringArray(preferenceService.TC_preference_site, "Oc9_Spec_NonbreakableWords", emptyValues);
+			VPSettings.nonbreakableWords = preferenceService.getStringArray(TCPreferenceService.TC_preference_site, "Oc9_Spec_NonbreakableWords", emptyValues);
 		} catch (TCException ex) {
 			ex.printStackTrace();
 			throw new RuntimeException("Error while initializing");
@@ -69,19 +70,16 @@ public class VP
 	
 	public void readExistingData()
 	{
-		System.out.println("@@@ READING EXISTING DATA @@@");
 		dataReader.readExistingData();
 	}
 	
 	public void readData()
 	{
-		System.out.println("@@@ READING DATA @@@");
 		dataReader.readData();
 	}
 
 	public void buildXmlFile()
 	{
-		System.out.println("@@@ BUILDING XML FILE @@@");
 		XmlBuilderConfiguration A3xmlBuilderConfiguration = new XmlBuilderConfiguration(23, 29);
 		XmlBuilderConfiguration.MaxWidthGlobalRemark = 474;
 
@@ -93,7 +91,6 @@ public class VP
 	
 	public void prepareData()
 	{
-		System.out.println("@@@ PREPARING DATA @@@");
 	}
 
 	public void buildReportFile()
@@ -107,13 +104,11 @@ public class VP
 	
 			report.configuration = A3pdfBuilderconfiguration;
 	
-			System.out.println("@@@ BUILDING PDF REPORT @@@");
 			PDFReportBuilder reportBuilder = new PDFReportBuilder(report);
 			reportBuilder.buildReportStatic();
 		}
 		else
 		{
-			System.out.println("@@@ BUILDING EXCEL REPORT @@@");
 			ExcelReportBuilder reportBuilder = new ExcelReportBuilder(report);
 			reportBuilder.buildReport();
 		}

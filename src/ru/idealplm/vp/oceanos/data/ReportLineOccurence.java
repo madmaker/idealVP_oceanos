@@ -9,7 +9,6 @@ import ru.idealplm.vp.oceanos.data.ReportLine.ReportLineType;
 public class ReportLineOccurence
 {
 	public ReportLine reportLine;
-	public TCComponentBOMLine bomLine;
 	public int quantityAssy = 0;
 	public int quantityKit = 0;
 	public double reserveFactor = 0.0;
@@ -17,12 +16,23 @@ public class ReportLineOccurence
 	
 	private ReportLineOccurence parent;
 	private ArrayList<ReportLineOccurence> children;
+	private TCComponentBOMLine bomLine;
 	
 	public ReportLineOccurence(ReportLine reportLine, ReportLineOccurence parentOccurence)
 	{
 		this.reportLine = reportLine;
 		this.parent = parentOccurence;
 		this.children = new ArrayList<ReportLineOccurence>(1);
+	}
+	
+	public ReportLineOccurence(TCComponentBOMLine bomLine)
+	{
+		this.bomLine = bomLine;
+	}
+	
+	public void readBOMData()
+	{
+		
 	}
 	
 	public void addChild(ReportLineOccurence child)

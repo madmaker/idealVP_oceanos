@@ -9,8 +9,13 @@ import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOMLine;
 import com.teamcenter.rac.kernel.TCComponentForm;
 import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCComponentItemRevision;
 import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.services.rac.cad.StructureManagementService;
+import com.teamcenter.services.rac.cad._2007_01.StructureManagement.ExpandPSAllLevelsInfo;
+import com.teamcenter.services.rac.cad._2007_01.StructureManagement.ExpandPSAllLevelsOutput;
+import com.teamcenter.services.rac.cad._2007_01.StructureManagement.ExpandPSAllLevelsPref;
+import com.teamcenter.services.rac.cad._2007_01.StructureManagement.ExpandPSAllLevelsResponse;
 import com.teamcenter.services.rac.cad._2007_01.StructureManagement.ExpandPSData;
 import com.teamcenter.services.rac.cad._2007_01.StructureManagement.ExpandPSOneLevelInfo;
 import com.teamcenter.services.rac.cad._2007_01.StructureManagement.ExpandPSOneLevelOutput;
@@ -45,6 +50,9 @@ public class DataReader
 	private ReportLine emptyLine;
 	private ReportLineOccurence emptyOccurence;
 	private ReportLineOccurence topOccurence;
+	private ReportLineOccurence parentOccurence;
+	private ReportLineOccurence cachedOccurence;
+	private Cache cache;
 	
 	static HashMap<String, String> mapUom = new HashMap<String, String>();
 	static {
@@ -66,7 +74,10 @@ public class DataReader
 		emptyLine = new ReportLine(ReportLineType.NONE);
 		emptyOccurence = new ReportLineOccurence(emptyLine, null);
 		emptyLine.addOccurence(emptyOccurence);
-		topOccurence = readBomLineData(VP.topBOMLine, emptyOccurence);
+		parentOccurence = emptyOccurence;
+		cachedOccurence = emptyOccurence;
+		topOccurence = readBomLineData(VP.topBOMLine);
+		cache = new Cache();
 	}
 	
 	public void readExistingData()
@@ -80,15 +91,12 @@ public class DataReader
 	public void findExistingVP()
 	{
 		try{
-			System.out.println("Looking for vsp!");
 			TCComponent[] documents = VP.topBOMLineIR.getRelatedComponents("Oc9_DocRel");
 			String IRid = VP.topBOMLineI.getProperty("item_id");
 			String id;
 			for(TCComponent document : documents){
 				id = document.getProperty("item_id");
-				System.out.println("Comparing " + id + " and " + IRid);
 				if(id.equals(IRid + " бо")){
-					System.out.println("Found one");
 					VP.vpIR = ((TCComponentItem)document).getLatestItemRevision();
 					VP.generalNoteForm = VP.vpIR.getRelatedComponent("Oc9_SignRel");
 					return;
@@ -147,74 +155,128 @@ public class DataReader
 	
 	public void readData()
 	{
-		readBomData(VP.topBOMLine, topOccurence, emptyOccurence);
+		readBomData(VP.topBOMLine);
 	}
+	
+	private void readBomData(final TCComponentBOMLine bomLine)
+    {
+	     ExpandPSAllLevelsInfo info = new ExpandPSAllLevelsInfo();
+	     ExpandPSAllLevelsPref pref = new ExpandPSAllLevelsPref();
 
-	private void readBomData(TCComponentBOMLine parentBomLine, ReportLineOccurence currentOccurence, ReportLineOccurence parentOccurence)
+	     info.parentBomLines = new TCComponentBOMLine[]{ bomLine };
+	     info.excludeFilter = "None";
+	     pref.expItemRev = false;
+     
+	     ExpandPSAllLevelsResponse resp = smsService.expandPSAllLevels(info, pref);
+
+	     for(ExpandPSAllLevelsOutput data : resp.output)
+	     {
+	    	 ReportLine parentLine = getParentLine(data.parent.bomLine);
+	    	 ReportLineOccurence parentOccurence = newOccurenceForBOMLine(data.parent.bomLine);
+	    	 parentOccurence.readBOMData();
+	    	 parentLine.addOccurence(parentOccurence);
+	    	 
+	    	 if(data.children.length > 0)
+	    	 {
+	    		 for(ExpandPSData child : data.children)
+	    		 {
+	    			 ReportLine childLine = getChildLine(child.bomLine);
+	    		 }
+	    	 }
+	    	 else
+	    		 System.out.println("\tChildren: none");
+	     }
+    }
+	
+	public ReportLine getParentLine(TCComponentBOMLine bomLine)
 	{
-		ReportLineOccurence tempOccurence;
-		if(currentOccurence==null) return;
-		if(currentOccurence.reportLine.type==ReportLineType.DOCUMENT) return;
-
-		TCComponentBOMLine[] childLines = unpackBomLines(parentBomLine);
-		for (TCComponentBOMLine bomLine : childLines)
+		try
 		{
-			tempOccurence = readBomLineData(bomLine, currentOccurence);
-			if(tempOccurence!=null)
-				currentOccurence.addChild(tempOccurence);
-			// TODO check if cancelled
+			String UID = bomLine.getItemRevision().getUid();
+			System.out.println("Parent: " + bomLine.getTCProperty("bl_line_name").getStringValue() + " UID:" + UID);
+			
+			if(lineList.containsLineWithUid(UID))
+			{
+				return lineList.getLine(UID);
+			}
+			else
+				return newReportLineForBOMLine(bomLine);
 		}
-		for(ReportLineOccurence child : currentOccurence.getChildren())
+		catch (Exception ex)
 		{
-			readBomData(child.bomLine, child, currentOccurence);
-			// TODO check if cancelled
+			ex.printStackTrace();
 		}
-		for (int i = 0; i < childLines.length; i++)	{
-			TCComponentBOMLine currBOMLine = childLines[i];
-			packBomLines(currBOMLine);
+		return emptyLine;
+	}
+	
+	public ReportLine newReportLineForBOMLine(TCComponentBOMLine bomLine)
+	{
+		try
+		{
+			ReportLine line = new ReportLine(bomLine);
+			line.readBOMData();
+			return line;
+		} 
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+			return emptyLine;
 		}
 	}
 	
-	public ReportLineOccurence readBomLineData(TCComponentBOMLine bomLine, ReportLineOccurence parentOccurence)
+	public ReportLineOccurence newOccurenceForBOMLine(TCComponentBOMLine bomLine)
 	{
-		ReportLineOccurence resultOccurence = null;
+		try
+		{
+			ReportLineOccurence occurence = new ReportLineOccurence(bomLine);
+			return occurence;
+		} 
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+			return emptyOccurence;
+		}
+	}
+	
+	public ReportLine getChildLine(TCComponentBOMLine bomLine)
+	{
+		try
+		{
+			String childUID = bomLine.getItemRevision().getUid();
+			System.out.println("Child: " + bomLine.getTCProperty("bl_line_name").getStringValue() + " UID:" + childUID);
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		return emptyLine;
+	}
+	
+	public ReportLineOccurence readBomLineData(TCComponentBOMLine bomLine)
+	{
 		try
 		{
 			blPropertyValues = bomLine.getProperties(blPropertyNames);
 			boolean hasValidType = hasValidType(blPropertyValues[0], blPropertyValues[1]);
 			if(hasValidType)
 			{
-				resultOccurence = processLine(bomLine, parentOccurence);
+				return processLine(bomLine, parentOccurence);
 			}
-		} catch (TCException ex)
+		}
+		catch (TCException ex)
 		{
 			ex.printStackTrace();
 		}
-		return resultOccurence;
+		
+		return emptyOccurence;
 	}
-	
-	public ReportLineOccurence processLine(TCComponentBOMLine bomLine, ReportLineOccurence parentOccurence)
-	{
-		ReportLineOccurence resultOccurence = null;
-		try{
-			if(lineList.containsLineWithUid(bomLine.getItem().getUid())){
-				resultOccurence = updateExistingLine(bomLine, parentOccurence);
-			} else {
-				resultOccurence = addNewLine(bomLine, parentOccurence);
-			}
-		} catch (TCException ex) {
-			ex.printStackTrace();
-		}
-		return resultOccurence;
-	}
-	
+
 	public ReportLineOccurence addNewLine(TCComponentBOMLine bomLine, ReportLineOccurence parentOccurence)
 	{
 		ReportLineOccurence resultOccurence = emptyOccurence;
 		try{
 			int quantity = blPropertyValues[2].trim().isEmpty()?1:Integer.parseInt(blPropertyValues[2]);
 			ReportLine line = new ReportLine(getTypeOfLine(bomLine));
-			System.out.println("READER: new line for " + blPropertyValues[3]);
 			line.uid = bomLine.getItem().getUid();
 			line.id = blPropertyValues[3];
 			line.fullName = blPropertyValues[5];
@@ -222,7 +284,6 @@ public class DataReader
 			TCComponentForm form1C = get1CForm(bomLine.getItem());
 			if(form1C!=null)
 			{
-				System.out.println("READER: form 1c exists for " + blPropertyValues[3]);
 				line.fullName = form1C.getProperty("oc9_RightName");
 				line.productCode = form1C.getProperty("oc9_ProductCode");
 				line.provider = form1C.getProperty("oc9_Provider");
@@ -237,7 +298,6 @@ public class DataReader
 			line.shortName = getShortName(line.fullName, line.productCode, line.provider);
 			resultOccurence = new ReportLineOccurence(line, parentOccurence);
 			resultOccurence.setQuantity(quantity);
-			resultOccurence.bomLine = bomLine;
 			resultOccurence.remark = blPropertyValues[4];
 			resultOccurence.reserveFactor = parseAdjustValue(blPropertyValues[6]);
 			line.addOccurence(resultOccurence);
@@ -255,12 +315,10 @@ public class DataReader
 		try{
 			int quantity = blPropertyValues[2].trim().isEmpty()?1:Integer.parseInt(blPropertyValues[2]);
 			ReportLine line = lineList.getLine(bomLine.getItem().getUid());
-			System.out.println("READER: upd line for " + blPropertyValues[3] + " with quantity " + quantity);
 			if(line.type==ReportLineType.DOCUMENT) 
 				return null;
 			resultOccurence = new ReportLineOccurence(line, parentOccurence);
 			resultOccurence.setQuantity(quantity);
-			resultOccurence.bomLine = bomLine;
 			resultOccurence.remark = blPropertyValues[4];
 			line.updateOccurence(resultOccurence);
 		} catch (Exception ex) 
@@ -346,74 +404,6 @@ public class DataReader
 		return false;
 	}
 	
-	private TCComponentBOMLine[] unpackBomLines(TCComponentBOMLine parent)
-	{
-		try
-		{
-			AIFComponentContext[] childArray = parent.getChildren();
-			for (int i=0; i < childArray.length; i++)
-				if (((TCComponentBOMLine)childArray[i].getComponent()).isPacked()) {
-					((TCComponentBOMLine)childArray[i].getComponent()).unpack();
-				}
-			
-			parent.refresh();
-			childArray = parent.getChildren(); 
-			ArrayList<TCComponentBOMLine> arrayListContext = null;
-			
-			if (childArray.length > 0)
-				arrayListContext = new ArrayList<TCComponentBOMLine>();
-	
-			for (int i=0; i < childArray.length; i++)
-				arrayListContext.add((TCComponentBOMLine)childArray[i].getComponent());
-			return arrayListContext.toArray(new TCComponentBOMLine[arrayListContext.size()]);
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-			return new TCComponentBOMLine[0];
-		}
-	}
-	
-	private void packBomLines(TCComponentBOMLine bomLine)
-	{
-		try
-		{
-			bomLine.pack();
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	private TCComponentBOMLine[] getChildBOMLines(TCComponentBOMLine parent)
-	{
-		TCComponentBOMLine[] childLines = null;
-		
-		ExpandPSOneLevelInfo levelInfo = new ExpandPSOneLevelInfo();
-		ExpandPSOneLevelPref levelPref = new ExpandPSOneLevelPref();
-
-		levelInfo.parentBomLines = new TCComponentBOMLine[] { parent };
-		levelInfo.excludeFilter = "None";
-		levelPref.expItemRev = true;
-
-		ExpandPSOneLevelResponse levelResp = smsService.expandPSOneLevel(levelInfo, levelPref);
-
-		if (levelResp.output.length > 0)
-		{
-			for (ExpandPSOneLevelOutput levelOut : levelResp.output)
-			{
-				childLines = new TCComponentBOMLine[levelOut.children.length];
-				for (int i=0; i<levelOut.children.length; i++)
-				{
-					childLines[i] = levelOut.children[i].bomLine;
-				}
-			}
-		}
-		
-		if(childLines==null) childLines = new TCComponentBOMLine[0];
-		
-		return childLines;
-	}
-	
 	private double parseAdjustValue(String adjustValue)
 	{
 		adjustValue = adjustValue.trim();
@@ -439,17 +429,5 @@ public class DataReader
 			}
 		}
 		return result;
-	}
-	
-	private void printData()
-	{
-		for(ReportLine line : lineList.getSortedList())
-		{
-			System.out.println("line " + line.fullName);
-			for(ReportLineOccurence occurence : line.occurences())
-			{
-				System.out.println("occurence " + occurence.getParentItemId());
-			}
-		}
 	}
 }

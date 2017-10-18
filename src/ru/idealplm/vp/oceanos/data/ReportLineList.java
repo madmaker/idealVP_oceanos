@@ -5,17 +5,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import ru.idealplm.vp.oceanos.comparator.ReportLinesComparator;
+import ru.idealplm.vp.oceanos.comparator.ReportLineComparator;
 
 public class ReportLineList
 {
 	private HashMap<String, ReportLine> reportLines;
-	private ReportLinesComparator comparator;
+	private ReportLineComparator comparator;
 	
 	public ReportLineList()
 	{
 		reportLines = new HashMap<String, ReportLine>();
-		comparator = new ReportLinesComparator();
+		comparator = new ReportLineComparator();
 	}
 	
 	public boolean containsLineWithUid(String uid)
