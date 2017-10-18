@@ -210,6 +210,8 @@ public class XmlBuilder
 				node = document.createElement("Col_" + 2);
 				node.setAttribute("align", "left");
 				node.setTextContent(line.nameLines.get(i));
+				if(line.nameLines.get(i).equals("Наименование не согласовано")) // If name is not approved, we paint it red
+					node.setAttribute("warning", "true");
 				node_occ.appendChild(node);
 				// Product code
 				node = document.createElement("Col_" + 3);
