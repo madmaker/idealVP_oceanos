@@ -12,7 +12,7 @@ public class ReportLineOccurence
 	public TCComponentBOMLine bomLine;
 	public int quantityAssy = 0;
 	public int quantityKit = 0;
-	public double reserveFactor = 0.0;
+	public double adjustFactor = 0.0;
 	public String remark = "";
 	
 	private ReportLineOccurence parent;
@@ -71,7 +71,7 @@ public class ReportLineOccurence
 	
 	public double getTotalQuantityWithReserve()
 	{
-		return quantityAssy + Math.ceil(quantityAssy*reserveFactor) + quantityKit;
+		return quantityAssy + Math.ceil(quantityAssy*adjustFactor) + quantityKit;
 	}
 	
 	private int getTotalQuantity()

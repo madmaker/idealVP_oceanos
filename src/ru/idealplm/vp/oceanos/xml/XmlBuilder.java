@@ -270,7 +270,7 @@ public class XmlBuilder
 					// Reserve Factor
 					node = document.createElement("Col_" + 9);
 					node.setAttribute("align", "center");
-					node.setTextContent(String.valueOf(currentOccurence.occurence.reserveFactor));
+					node.setTextContent(String.valueOf(currentOccurence.occurence.adjustFactor));
 					node_occ.appendChild(node);
 					// Total quantity
 					node = document.createElement("Col_" + 10);

@@ -121,7 +121,7 @@ public class ExcelReportBuilder
 			cellQuantityKit = row.createCell(6);
 			cellQuantityKit.setCellValue(occurence.quantityKit);
 			cellReserveFactor = row.createCell(7);
-			cellReserveFactor.setCellValue(occurence.reserveFactor);
+			cellReserveFactor.setCellValue(occurence.adjustFactor);
 			cellQuantityTotal = row.createCell(8);
 			cellQuantityTotal.setCellValue(occurence.getTotalQuantityWithReserve());
 			cellRemark = row.createCell(9);

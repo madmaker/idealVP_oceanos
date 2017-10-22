@@ -181,6 +181,12 @@ public class DataReader
 		try
 		{
 			blPropertyValues = bomLine.getProperties(blPropertyNames);
+			
+			if(blPropertyValues[0].equals("Коммерческое изделие"))
+			{
+				System.out.println(blPropertyValues[0] + " " + blPropertyValues[1] + " " + blPropertyValues[2] + " " + blPropertyValues[3] + " " + blPropertyValues[4] + " " + blPropertyValues[5] + " " + blPropertyValues[6]);
+			}
+			
 			boolean hasValidType = hasValidType(blPropertyValues[0], blPropertyValues[1]);
 			if(hasValidType)
 			{
@@ -239,7 +245,7 @@ public class DataReader
 			resultOccurence.setQuantity(quantity);
 			resultOccurence.bomLine = bomLine;
 			resultOccurence.remark = blPropertyValues[4];
-			resultOccurence.reserveFactor = parseAdjustValue(blPropertyValues[6]);
+			resultOccurence.adjustFactor = parseAdjustValue(blPropertyValues[6]);
 			line.addOccurence(resultOccurence);
 			lineList.addLine(line);
 		} catch (Exception ex) 
@@ -262,6 +268,7 @@ public class DataReader
 			resultOccurence.setQuantity(quantity);
 			resultOccurence.bomLine = bomLine;
 			resultOccurence.remark = blPropertyValues[4];
+			resultOccurence.adjustFactor = parseAdjustValue(blPropertyValues[6]);
 			line.updateOccurence(resultOccurence);
 		} catch (Exception ex) 
 		{
@@ -361,13 +368,21 @@ public class DataReader
 			ArrayList<TCComponentBOMLine> arrayListContext = null;
 			
 			if (childArray.length > 0)
+			{
 				arrayListContext = new ArrayList<TCComponentBOMLine>();
-	
-			for (int i=0; i < childArray.length; i++)
-				arrayListContext.add((TCComponentBOMLine)childArray[i].getComponent());
-			return arrayListContext.toArray(new TCComponentBOMLine[arrayListContext.size()]);
+				for (int i=0; i < childArray.length; i++)
+				{
+					arrayListContext.add((TCComponentBOMLine)childArray[i].getComponent());
+				}
+				return arrayListContext.toArray(new TCComponentBOMLine[arrayListContext.size()]);
+			}
+			else
+			{
+				return new TCComponentBOMLine[0];
+			}
 		}
-		catch (Exception ex) {
+		catch (Exception ex)
+		{
 			ex.printStackTrace();
 			return new TCComponentBOMLine[0];
 		}
@@ -416,6 +431,7 @@ public class DataReader
 	
 	private double parseAdjustValue(String adjustValue)
 	{
+		System.out.println("parsing adjust value: " + adjustValue);
 		adjustValue = adjustValue.trim();
 		if(adjustValue.isEmpty()) return 0;
 		
