@@ -180,6 +180,7 @@ public class DataReader
 		ReportLineOccurence resultOccurence = null;
 		try
 		{
+			bomLine.refresh();
 			blPropertyValues = bomLine.getProperties(blPropertyNames);
 			
 			if(blPropertyValues[0].equals("Коммерческое изделие"))
