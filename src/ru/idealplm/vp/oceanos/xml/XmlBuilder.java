@@ -189,6 +189,7 @@ public class XmlBuilder
 			occurencesHeight += occurence.getLineHeight();
 		}
 		int totalHeight = lineHeight>occurencesHeight?lineHeight:occurencesHeight;
+		int totalQuantityHeightIncrement = (line.occurences.size()>1 && occurencesHeight>=lineHeight) ? 1 : 0;
 		if(totalHeight + totalQuantityHeightIncrement > getFreeLinesNum()) 
 			newPage();
 		int currentOccurenceNumber = 0;
